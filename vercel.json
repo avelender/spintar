@@ -1,44 +1,7 @@
 {
-  "version": 2,
   "functions": {
-    "api/auth/login.js": {
-      "runtime": "nodejs20.x",
-      "maxDuration": 30
-    },
-    "api/auth/callback.js": {
-      "runtime": "nodejs20.x",
-      "maxDuration": 30
-    },
-    "api/auth/refresh.js": {
-      "runtime": "nodejs20.x",
-      "maxDuration": 30
-    },
-    "api/auth/logout.js": {
-      "runtime": "nodejs20.x",
-      "maxDuration": 10
-    },
-    "api/user/profile.js": {
-      "runtime": "nodejs20.x",
-      "maxDuration": 30
+    "api/**/*.js": {
+      "runtime": "nodejs20.x"
     }
-  },
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "X-Requested-With, Content-Type, Accept, Authorization"
-        }
-      ]
-    }
-  ]
+  }
 }
