@@ -586,6 +586,20 @@
             font-size: 13px;
             color: var(--text-color);
         }
+        
+        .debug-logout {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            z-index: 1001;
+        }
     </style>
 </head>
 <body>
@@ -700,6 +714,9 @@
         </div>
     </div>
 
+    <!-- Debug кнопка принудительной очистки -->
+    <button class="debug-logout" onclick="forceLogout()">Очистить токены</button>
+
     <script>
         // Firebase references (initialized by module script)  
         let fireDB, fireDoc, fireGetDoc, fireSetDoc, fireOnSnapshot;
@@ -724,6 +741,32 @@
             } else {
                 console.log('❌ Firebase модули не загрузились');
                 return false;
+            }
+        }
+
+        // Принудительная очистка токенов (debug функция)
+        async function forceLogout() {
+            try {
+                await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                // Очищаем локальное состояние
+                currentUser = null;
+                isLoggedIn = false;
+                updateAuthUI();
+                
+                alert('Токены очищены! Теперь попробуй авторизацию.');
+                console.log('🧹 Токены принудительно очищены');
+            } catch (error) {
+                console.error('❌ Ошибка при очистке:', error);
+                
+                // Даже если API не сработал, очищаем локально
+                currentUser = null;
+                isLoggedIn = false;
+                updateAuthUI();
+                alert('Локальное состояние очищено. Попробуй авторизацию.');
             }
         }
 

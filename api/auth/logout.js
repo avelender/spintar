@@ -1,7 +1,7 @@
 // Выход пользователя - очистка токенов авторизации
 export default function handler(req, res) {
-    // Разрешаем только POST запросы
-    if (req.method !== 'POST') {
+    // Разрешаем POST и GET запросы
+    if (req.method !== 'POST' && req.method !== 'GET') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
