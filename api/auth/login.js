@@ -24,17 +24,17 @@ export default function handler(req, res) {
         ]);
 
         // Формируем URL для авторизации на орбитаре
-        const authUrl = new URL('https://orbitar.space/oauth2/authorize');
-        authUrl.searchParams.set('client_id', clientId);
-        authUrl.searchParams.set('scope', 'user');
-        authUrl.searchParams.set('redirect_uri', redirectUri);
-        authUrl.searchParams.set('state', state);
-        authUrl.searchParams.set('response_type', 'code');
+        const authUrl = `https://api.orbitar.space/api/v1/oauth2/authorize?` +
+            `client_id=${encodeURIComponent(clientId)}&` +
+            `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+            `response_type=code&` +
+            `scope=${encodeURIComponent('user status')}&` +
+            `state=${encodeURIComponent(state)}`;
 
-        console.log('🚀 Redirecting to Orbitar OAuth2:', authUrl.toString());
+        console.log('🚀 Redirecting to Orbitar OAuth2:', authUrl);
 
         // Редиректим пользователя на страницу авторизации орбитара
-        res.redirect(302, authUrl.toString());
+        res.redirect(302, authUrl);
 
     } catch (error) {
         console.error('❌ Ошибка при инициации OAuth2:', error);
