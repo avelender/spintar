@@ -1,35 +1,24 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
   "functions": {
     "api/auth/login.js": {
+      "runtime": "@vercel/node@3",
       "maxDuration": 30
     },
     "api/auth/callback.js": {
+      "runtime": "@vercel/node@3",
       "maxDuration": 30
     },
     "api/auth/refresh.js": {
+      "runtime": "@vercel/node@3",
       "maxDuration": 30
     },
     "api/auth/logout.js": {
+      "runtime": "@vercel/node@3",
       "maxDuration": 10
     },
     "api/user/profile.js": {
+      "runtime": "@vercel/node@3",
       "maxDuration": 30
     }
   },
