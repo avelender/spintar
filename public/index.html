@@ -63,18 +63,19 @@
         }
 
         .theme-switch {
-            position: fixed;
-            top: 20px;
-            right: 20px;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
             background: var(--container-bg);
-            padding: 8px 16px;
+            padding: 8px 12px;
             border-radius: 20px;
-            box-shadow: 0 2px 5px var(--shadow-color);
             cursor: pointer;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            border: 2px solid var(--border-color);
             transition: all 0.3s ease;
+            margin-top: 10px;
+            width: fit-content;
         }
 
         .theme-switch:hover {
@@ -446,14 +447,24 @@
             }
         }
 
+            .spin-button:active, .bonus-button:active {
+                transform: scale(0.98);
+            }
+
+            .score {
+                font-size: 24px;
+                margin: 20px 0;
+                color: var(--score-label-color);
+            }
+
         /* Стили для рейтинга */
         .leaderboard-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 12px;
-            margin-bottom: 6px;
-            background: var(--bg-color);
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            background: var(--container-bg);
             border-radius: 6px;
             transition: background-color 0.3s ease;
         }
@@ -607,11 +618,6 @@
     </style>
 </head>
 <body>
-    <div class="theme-switch" onclick="toggleTheme()">
-        <span class="theme-icon">☀️</span>
-        <span class="theme-text">Light</span>
-    </div>
-    
     <!-- Блок авторизации -->
     <div class="auth-panel" id="authPanel">
         <div class="user-info" id="userInfo" style="display: none;">
@@ -628,6 +634,10 @@
                 <div class="guest-score" id="guestScore">0 points</div>
             </div>
             <button class="login-btn" onclick="login()">Login via Orbitar</button>
+        </div>
+        <div class="theme-switch" onclick="toggleTheme()">
+            <span class="theme-icon">☀️</span>
+            <span class="theme-text">Light</span>
         </div>
     </div>
     <div class="game-container">
