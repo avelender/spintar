@@ -20,13 +20,15 @@ export default async function handler(req, res) {
         }
 
         // Запрашиваем профиль пользователя через API орбитара
-        const profileResponse = await fetch('https://api.orbitar.space/api/v1/me', {
-            method: 'GET',
+        const profileResponse = await fetch('https://api.orbitar.space/api/v1/status', {
+            method: 'POST',
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
                 'User-Agent': 'SpinTar-Game/1.0',
+                'Content-Type': 'application/json',
                 'Accept': 'application/json'
-            }
+            },
+            body: JSON.stringify({})
         });
 
         if (!profileResponse.ok) {
