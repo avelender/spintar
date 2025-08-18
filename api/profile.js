@@ -28,17 +28,13 @@ export default async function handler(req, res) {
         let decodedPayload;
         try {
             const tokenParts = accessToken.split('.');
-            console.log('🔍 [DEBUG] Token parts count:', tokenParts.length);
+            console.log(' [DEBUG] Token parts count:', tokenParts.length);
             
-            if (tokenParts.length === 3) {
-                decodedPayload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
-                console.log('🔍 [DEBUG] JWT payload:', JSON.stringify(decodedPayload, null, 2));
-                
-                username = decodedPayload.username || decodedPayload.sub || decodedPayload.user;
-                console.log('🔍 [DEBUG] Extracted username:', username);
-            }
+            const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
+            username = payload.user?.username || payload.username || payload.sub;
+            console.log(' [DEBUG] Extracted username:', username);
         } catch (error) {
-            console.log('❌ [DEBUG] JWT decode error:', error.message);
+            console.log(' [DEBUG] JWT decode error:', error.message);
         }
 
         // Если не удалось получить username из токена, пробуем без параметров
