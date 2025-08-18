@@ -20,11 +20,11 @@ export default function handler(req, res) {
         
         // Сохраняем state в cookie для проверки при callback
         res.setHeader('Set-Cookie', [
-            `oauth_state=${state}; HttpOnly; Secure; SameSite=Lax; Max-Age=600; Path=/`
+            `oauth_state=${state}; HttpOnly; SameSite=Lax; Max-Age=600; Path=/`
         ]);
 
         // Формируем URL для авторизации на орбитаре
-        const authUrl = `https://api.orbitar.space/api/v1/oauth2/authorize?` +
+        const authUrl = `https://orbitar.space/oauth2/authorize?` +
             `client_id=${encodeURIComponent(clientId)}&` +
             `redirect_uri=${encodeURIComponent(redirectUri)}&` +
             `response_type=code&` +
