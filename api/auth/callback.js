@@ -6,7 +6,18 @@ export default async function handler(req, res) {
     }
 
     try {
+        console.log('🔍 [DEBUG] Callback invoked');
+        console.log('🔍 [DEBUG] Request method:', req.method);
+        console.log('🔍 [DEBUG] Request URL:', req.url);
+        console.log('🔍 [DEBUG] Query params:', JSON.stringify(req.query, null, 2));
+        console.log('🔍 [DEBUG] Headers:', JSON.stringify(req.headers, null, 2));
+        
         const { code, state, error } = req.query;
+        
+        console.log('🔍 [DEBUG] Extracted params:');
+        console.log('  - code:', code);
+        console.log('  - state:', state); 
+        console.log('  - error:', error);
         
         // Проверяем, если пользователь отклонил авторизацию
         if (error) {
@@ -16,6 +27,7 @@ export default async function handler(req, res) {
 
         if (!code || !state) {
             console.error('❌ Отсутствует code или state в callback');
+            console.error('❌ All query params:', Object.keys(req.query));
             return res.redirect('/?error=invalid_request');
         }
 
