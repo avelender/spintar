@@ -1111,12 +1111,16 @@
         // Функция для получения IP
         async function getClientIP() {
             try {
+                console.log('🌍 [DEBUG] Получаем IP...');
                 const response = await fetch('https://api.ipify.org?format=json');
                 const data = await response.json();
                 currentIP = data.ip;
+                console.log('🌍 [DEBUG] IP получен:', currentIP);
             } catch (error) {
+                console.log('❌ [DEBUG] Ошибка получения IP:', error);
                 // Если не удалось получить IP, используем случайное число
                 currentIP = Math.floor(Math.random() * 256).toString();
+                console.log('🌍 [DEBUG] Используем случайный IP:', currentIP);
             }
         }
 
@@ -1377,12 +1381,18 @@
         }
 
         function initializeReels() {
+            console.log('🎰 [DEBUG] Инициализируем барабаны...');
             const reelStrips = document.querySelectorAll('.reel-strip');
-            reelStrips.forEach(strip => {
+            console.log('🎰 [DEBUG] Найдено барабанов:', reelStrips.length);
+            
+            reelStrips.forEach((strip, index) => {
                 const symbols = createReelContent();
+                console.log(`🎰 [DEBUG] Создано символов для барабана ${index}:`, symbols.length);
                 strip.innerHTML = ''; // Очищаем содержимое
                 symbols.forEach(symbol => strip.appendChild(symbol));
+                console.log(`🎰 [DEBUG] Барабан ${index} инициализирован`);
             });
+            console.log('🎰 [DEBUG] Все барабаны инициализированы');
         }
 
         function clearWinLines() {
@@ -1404,10 +1414,13 @@
         }
 
         async function spin() {
+            console.log('🎰 [DEBUG] Spin clicked, isSpinning:', isSpinning);
             if (isSpinning) return;
 
             // Проверяем IP
+            console.log('🎰 [DEBUG] Current IP:', currentIP);
             if (!currentIP) {
+                console.log('❌ [DEBUG] IP отсутствует, выходим из spin');
                 return;
             }
 
