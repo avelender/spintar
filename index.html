@@ -444,12 +444,173 @@
                 transform: translateX(0);
             }
         }
+
+        /* Стили для рейтинга */
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background: var(--bg-color);
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+        }
+
+        .leaderboard-item:hover {
+            background: rgba(184, 111, 61, 0.1);
+        }
+
+        .leaderboard-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .leaderboard-item .rank {
+            font-size: 16px;
+            font-weight: bold;
+            min-width: 30px;
+        }
+
+        .leaderboard-item .username {
+            flex: 1;
+            margin: 0 10px;
+            font-weight: 500;
+            color: var(--title-color);
+        }
+
+        .leaderboard-item .score {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .no-scores {
+            text-align: center;
+            color: #95a5a6;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        /* Стили для панели авторизации */
+        .auth-panel {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 1000;
+            background: var(--bg-color);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 2px solid var(--border-color);
+        }
+
+        .user-info, .login-panel {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            min-width: 120px;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--title-color);
+            font-size: 14px;
+        }
+
+        .user-score, .guest-score {
+            font-size: 12px;
+            color: var(--accent-color);
+            font-weight: 500;
+        }
+
+        .login-btn, .logout-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .login-btn {
+            background: linear-gradient(135deg, #B86F3D, #D4853F);
+            color: white;
+        }
+
+        .login-btn:hover {
+            background: linear-gradient(135deg, #A0623A, #C07A3C);
+            transform: translateY(-1px);
+        }
+
+        .logout-btn {
+            background: var(--border-color);
+            color: var(--text-color);
+            font-size: 12px;
+            padding: 6px 10px;
+        }
+
+        .logout-btn:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .guest-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+            margin-right: 10px;
+        }
+
+        .guest-info span {
+            font-size: 13px;
+            color: var(--text-color);
+        }
     </style>
 </head>
 <body>
     <div class="theme-switch" onclick="toggleTheme()">
         <span class="theme-icon">☀️</span>
         <span class="theme-text">Light</span>
+    </div>
+    
+    <!-- Блок авторизации -->
+    <div class="auth-panel" id="authPanel">
+        <div class="user-info" id="userInfo" style="display: none;">
+            <div class="user-avatar" id="userAvatar">👤</div>
+            <div class="user-details">
+                <div class="user-name" id="userName">Гость</div>
+                <div class="user-score" id="userScore">0 очков</div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Выйти</button>
+        </div>
+        <div class="login-panel" id="loginPanel">
+            <div class="guest-info">
+                <span>👤 Играешь как гость</span>
+                <div class="guest-score" id="guestScore">0 очков</div>
+            </div>
+            <button class="login-btn" onclick="login()">Войти через Орбитар</button>
+        </div>
     </div>
     <div class="game-container">
         <div class="price-list">
@@ -527,16 +688,9 @@
             </div>
         </div>
         <div class="scores-table">
-            <h2>Highscores</h2>
-            <div class="scores-category">
-                <div class="category-header">Even IP</div>
-                <div class="total-score" id="evenScore">0</div>
-                <div class="category-ips" id="evenIPs">No players</div>
-            </div>
-            <div class="scores-category">
-                <div class="category-header">Odd IP</div>
-                <div class="total-score" id="oddScore">0</div>
-                <div class="category-ips" id="oddIPs">No players</div>
+            <h2>🏆 Highscores</h2>
+            <div id="leaderboard">
+                <div class="no-scores">No players yet</div>
             </div>
         </div>
 
@@ -573,12 +727,161 @@
             }
         }
 
-        let currentIP = null;
-        let isSpinning = false;
-        let evenTotalScore = 0;
-        let oddTotalScore = 0;
-        let evenIPs = new Set();
-        let oddIPs = new Set();
+        // Функции для работы с OAuth2
+        async function login() {
+            try {
+                // Перенаправляем на страницу авторизации
+                window.location.href = '/api/auth/login';
+            } catch (error) {
+                console.error('❌ Ошибка при входе:', error);
+                alert('Ошибка при входе. Попробуйте позже.');
+            }
+        }
+
+        async function logout() {
+            try {
+                const response = await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    currentUser = null;
+                    isLoggedIn = false;
+                    updateAuthUI();
+                    console.log('✅ Успешный выход');
+                } else {
+                    throw new Error('Logout failed');
+                }
+            } catch (error) {
+                console.error('❌ Ошибка при выходе:', error);
+                // Даже если запрос не прошел, очищаем локальное состояние
+                currentUser = null;
+                isLoggedIn = false;
+                updateAuthUI();
+            }
+        }
+
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch('/api/user/profile', {
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const userData = await response.json();
+                    currentUser = userData;
+                    isLoggedIn = true;
+                    console.log('✅ Пользователь авторизован:', userData.username);
+                } else if (response.status === 401) {
+                    const errorData = await response.json();
+                    if (errorData.needRefresh) {
+                        // Пытаемся обновить токен
+                        const refreshResponse = await fetch('/api/auth/refresh', {
+                            method: 'POST',
+                            credentials: 'include'
+                        });
+
+                        if (refreshResponse.ok) {
+                            // Токен обновлен, пытаемся снова получить профиль
+                            return await checkAuthStatus();
+                        }
+                    }
+                    // Пользователь не авторизован
+                    currentUser = null;
+                    isLoggedIn = false;
+                } else {
+                    throw new Error('Failed to check auth status');
+                }
+            } catch (error) {
+                console.error('❌ Ошибка проверки авторизации:', error);
+                currentUser = null;
+                isLoggedIn = false;
+            }
+
+            updateAuthUI();
+        }
+
+        function updateAuthUI() {
+            const userInfo = document.getElementById('userInfo');
+            const loginPanel = document.getElementById('loginPanel');
+            const userName = document.getElementById('userName');
+            const userScore = document.getElementById('userScore');
+            const guestScore = document.getElementById('guestScore');
+
+            if (isLoggedIn && currentUser) {
+                // Показываем информацию о пользователе
+                userInfo.style.display = 'flex';
+                loginPanel.style.display = 'none';
+                
+                userName.textContent = currentUser.displayName || currentUser.username;
+                const currentScore = playerScores[currentUser.username] || 0;
+                userScore.textContent = `${currentScore} очков`;
+
+                // Обновляем аватар если есть
+                const userAvatar = document.getElementById('userAvatar');
+                if (currentUser.avatar) {
+                    userAvatar.innerHTML = `<img src="${currentUser.avatar}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+                } else {
+                    userAvatar.innerHTML = currentUser.username.charAt(0).toUpperCase();
+                }
+            } else {
+                // Показываем панель входа
+                userInfo.style.display = 'none';
+                loginPanel.style.display = 'flex';
+                
+                // Показываем очки гостя (по IP)
+                const tempUsername = currentIP ? currentIP.split('.').pop() : 'guest';
+                const guestPoints = playerScores[tempUsername] || 0;
+                guestScore.textContent = `${guestPoints} очков`;
+            }
+        }
+
+        function getCurrentUsername() {
+            if (isLoggedIn && currentUser) {
+                return currentUser.username;
+            } else {
+                // Возвращаем временный никнейм на основе IP
+                return currentIP ? currentIP.split('.').pop() : 'guest';
+            }
+        }
+
+        // Проверяем параметры URL при загрузке
+        function checkURLParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const authStatus = urlParams.get('auth');
+            const error = urlParams.get('error');
+
+            if (authStatus === 'success') {
+                console.log('🎉 Авторизация успешна!');
+                // Проверяем статус авторизации
+                checkAuthStatus();
+                // Очищаем URL от параметров
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else if (error) {
+                console.error('❌ Ошибка авторизации:', error);
+                let errorMessage = 'Ошибка авторизации';
+                switch (error) {
+                    case 'access_denied':
+                        errorMessage = 'Доступ запрещен. Вы отклонили авторизацию.';
+                        break;
+                    case 'invalid_request':
+                        errorMessage = 'Некорректный запрос авторизации.';
+                        break;
+                    case 'state_mismatch':
+                        errorMessage = 'Ошибка безопасности. Попробуйте снова.';
+                        break;
+                    case 'server_config':
+                        errorMessage = 'Ошибка конфигурации сервера.';
+                        break;
+                    default:
+                        errorMessage = `Ошибка авторизации: ${error}`;
+                }
+                alert(errorMessage);
+                // Очищаем URL от параметров
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
 
         // Функции для работы с историей
         function addHistoryItem(type, message) {
@@ -619,10 +922,7 @@
                     const data = docSnap.data();
                     console.log('✅ Firebase: Данные загружены!', data);
                     
-                    evenTotalScore = data.evenTotalScore || 0;
-                    oddTotalScore = data.oddTotalScore || 0;
-                    evenIPs = new Set(data.evenIPs || []);
-                    oddIPs = new Set(data.oddIPs || []);
+                    playerScores = data.playerScores || {};
                     
                     updateScoreDisplay('firebase');
                 } else {
@@ -643,10 +943,7 @@
             try {
                 const gameDocRef = fireDoc(fireDB, 'scores', 'game_data');
                 const gameData = {
-                    evenTotalScore: evenTotalScore,
-                    oddTotalScore: oddTotalScore,
-                    evenIPs: Array.from(evenIPs),
-                    oddIPs: Array.from(oddIPs),
+                    playerScores: playerScores,
                     lastUpdated: new Date().toISOString()
                 };
                 
@@ -668,10 +965,7 @@
                 const savedData = localStorage.getItem('slotMachineScores');
                 if (savedData) {
                     const data = JSON.parse(savedData);
-                    evenTotalScore = data.evenTotalScore || 0;
-                    oddTotalScore = data.oddTotalScore || 0;
-                    evenIPs = new Set(data.evenIPs || []);
-                    oddIPs = new Set(data.oddIPs || []);
+                    playerScores = data.playerScores || {};
                     updateScoreDisplay('localStorage');
                 } else {
                     updateScoreDisplay('offline');
@@ -687,10 +981,7 @@
                 const savedData = localStorage.getItem('slotMachineScores');
                 if (savedData) {
                     const data = JSON.parse(savedData);
-                    evenTotalScore = data.evenTotalScore || 0;
-                    oddTotalScore = data.oddTotalScore || 0;
-                    evenIPs = new Set(data.evenIPs || []);
-                    oddIPs = new Set(data.oddIPs || []);
+                    playerScores = data.playerScores || {};
                     updateScoreDisplay('localStorage');
                 }
             } catch (error) {
@@ -702,10 +993,7 @@
         function saveLocalScores() {
             try {
                 const data = {
-                    evenTotalScore,
-                    oddTotalScore,
-                    evenIPs: Array.from(evenIPs),
-                    oddIPs: Array.from(oddIPs)
+                    playerScores
                 };
                 localStorage.setItem('slotMachineScores', JSON.stringify(data));
             } catch (error) {
@@ -723,10 +1011,7 @@
                         const data = doc.data();
                         console.log('🔄 Firebase: Получено обновление данных');
                         
-                        evenTotalScore = data.evenTotalScore || 0;
-                        oddTotalScore = data.oddTotalScore || 0;
-                        evenIPs = new Set(data.evenIPs || []);
-                        oddIPs = new Set(data.oddIPs || []);
+                        playerScores = data.playerScores || {};
                         
                         updateScoreDisplay('firebase');
                     }
@@ -734,58 +1019,50 @@
                     console.log('❌ Firebase: Ошибка подписки:', error.message);
                 });
             } catch (error) {
-                console.log('❌ Firebase: Не удалось подписаться на изменения');
+                console.log('❌ Firebase: Ошибка инициализации подписки:', error.message);
             }
         }
 
-        // Обновляем отображение счёта с индикацией источника
+        // Обновляем отображение рейтинга
         function updateScoreDisplay(dataSource = 'offline') {
-            const evenScoreEl = document.getElementById('evenScore');
-            const oddScoreEl = document.getElementById('oddScore');
+            const leaderboard = document.getElementById('leaderboard');
             
-            // Индикатор источника данных (закомментировано для отладки)
-            // let sourceIcon = '';
-            // if (dataSource === 'firebase') {
-            //     sourceIcon = ' 🔥'; // Firebase
-            // } else if (dataSource === 'localStorage') {
-            //     sourceIcon = ' 💾'; // localStorage
-            // } else {
-            //     sourceIcon = ' ❌'; // offline
-            // }
+            // Сортируем игроков по очкам
+            const sortedPlayers = Object.entries(playerScores)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 10); // Топ 10
             
-            evenScoreEl.textContent = evenTotalScore; // + sourceIcon; (закомментировано)
-            oddScoreEl.textContent = oddTotalScore; // + sourceIcon; (закомментировано)
-            
-            // Обновляем списки IP
-            document.getElementById('evenIPs').textContent = 
-                evenIPs.size > 0 ? `IP: ${Array.from(evenIPs).join(', ')}` : 'No players';
-            document.getElementById('oddIPs').textContent = 
-                oddIPs.size > 0 ? `IP: ${Array.from(oddIPs).join(', ')}` : 'No players';
-            
-            console.log(`🎨 Счет обновлен (${dataSource}): Even=${evenTotalScore}, Odd=${oddTotalScore}`);
-        }
-
-        // Обновляем общий счёт (рефакторинг)
-        async function updateTotalScore(points) {
-            if (!currentIP) return;
-            
-            updatePlayerScore(currentIP, points);
-            updateScoreDisplay('firebase');
-            saveScores(); // убрал await - сохраняем в фон для быстроты
-        }
-
-        // Вынесенная логика обновления очков игрока
-        function updatePlayerScore(ip, points) {
-            const lastDigit = parseInt(ip.split('.').pop());
-            const lastOctet = ip.split('.').pop();
-
-            if (lastDigit % 2 === 0) {
-                evenTotalScore += points;
-                evenIPs.add(lastOctet);
+            if (sortedPlayers.length === 0) {
+                leaderboard.innerHTML = '<div class="no-scores">No players yet</div>';
             } else {
-                oddTotalScore += points;
-                oddIPs.add(lastOctet);
+                leaderboard.innerHTML = sortedPlayers.map(([username, score], index) => {
+                    const medals = ['🥇', '🥈', '🥉'];
+                    const medal = index < 3 ? medals[index] : `${index + 1}.`;
+                    return `
+                        <div class="leaderboard-item">
+                            <span class="rank">${medal}</span>
+                            <span class="username">@${username}</span>
+                            <span class="score">${score} pts</span>
+                        </div>
+                    `;
+                }).join('');
             }
+            
+            console.log(`🎨 Рейтинг обновлен (${dataSource}):`, playerScores);
+        }
+
+        // Обновляем счёт игрока
+        async function updatePlayerScore(username, points) {
+            if (!username) return;
+            
+            if (!playerScores[username]) {
+                playerScores[username] = 0;
+            }
+            playerScores[username] += points;
+            
+            updateScoreDisplay('firebase');
+            saveScores(); // сохраняем в фон для быстроты
+            updateAuthUI(); // обновляем интерфейс авторизации
         }
 
         // Функция для получения IP
@@ -837,8 +1114,9 @@
                     return;
                 }
 
-                // Добавляем 100 очков в соответствующий счетчик
-                await updateTotalScore(100);
+                // Добавляем 100 очков текущему пользователю
+                const username = getCurrentUsername();
+                await updatePlayerScore(username, 100);
                 
                 // Отключаем кнопку и запускаем таймер
                 bonusButton.disabled = true;
@@ -912,6 +1190,9 @@
             try {
                 console.log('🚀 Запуск игры...');
                 
+                // Проверяем параметры URL и статус авторизации
+                checkURLParams();
+                
                 // Инициализируем Firebase
                 initializeFirebase();
                 
@@ -922,6 +1203,9 @@
                 await getClientIP();
                 console.log('🌍 IP получен:', currentIP);
                 
+                // Проверяем статус авторизации
+                await checkAuthStatus();
+                
                 // Инициализируем барабаны
                 await initializeReels();
                 
@@ -930,6 +1214,9 @@
                 
                 // Подписываемся на обновления
                 subscribeToScores();
+                
+                // Обновляем интерфейс авторизации
+                updateAuthUI();
                 
                 // Инициализируем кнопку спина
                 const spinButton = document.querySelector('.spin-button');
@@ -1081,25 +1368,18 @@
                 return;
             }
 
-            // Определяем, к какой группе относится IP
-            const lastDigit = parseInt(currentIP.split('.').pop());
-            const isEven = lastDigit % 2 === 0;
-            const currentScore = isEven ? evenTotalScore : oddTotalScore;
+            // Получаем текущего пользователя (авторизованный или гость по IP)
+            const username = getCurrentUsername();
+            const currentScore = playerScores[username] || 0;
 
             // Проверяем, достаточно ли очков
             if (currentScore < 100) {
-                alert(`Недостаточно очков для спина! Нужно 100, а в вашей группе ${currentScore}`);
+                alert(`Недостаточно очков для спина! Нужно 100, а у вас ${currentScore}`);
                 return;
             }
 
             // Списываем 100 очков
-            if (isEven) {
-                evenTotalScore -= 100;
-                evenIPs.add(currentIP.split('.').pop());
-            } else {
-                oddTotalScore -= 100;
-                oddIPs.add(currentIP.split('.').pop());
-            }
+            await updatePlayerScore(username, -100);
 
             // СРАЗУ запускаем анимацию для мгновенного отклика
             isSpinning = true;
@@ -1143,7 +1423,7 @@
             });
         }
 
-        function checkWinningLines() {
+        async function checkWinningLines() {
             const reelStrips = document.querySelectorAll('.reel-strip');
             const symbols = Array.from(reelStrips).map(strip => {
                 const visibleSymbols = [];
@@ -1292,11 +1572,9 @@
             }
 
             if(winnings > 0) {
-                // Используем уже готовую функцию для обновления очков
-                updatePlayerScore(currentIP, winnings);
-                
-                updateScoreDisplay('firebase');
-                saveScores(); // тоже без await - в фон
+                // Используем текущего пользователя для обновления очков
+                const username = getCurrentUsername();
+                await updatePlayerScore(username, winnings);
                 
                 // Показываем чистый выигрыш (за вычетом стоимости спина)
                 const netWin = winnings - 100;
