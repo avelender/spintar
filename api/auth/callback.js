@@ -66,6 +66,8 @@ export default async function handler(req, res) {
         }
 
         const tokenData = await tokenResponse.json();
+        console.log('🔍 [DEBUG] Token response:', JSON.stringify(tokenData, null, 2));
+        
         const { access_token, refresh_token, expires_in } = tokenData;
 
         if (!access_token) {
@@ -73,18 +75,25 @@ export default async function handler(req, res) {
             return res.redirect('/?error=no_access_token');
         }
 
+        console.log('🔍 [DEBUG] Tokens received:');
+        console.log('  - access_token length:', access_token.length);
+        console.log('  - refresh_token exists:', !!refresh_token);
+        console.log('  - expires_in:', expires_in);
+
         // Устанавливаем токены в HttpOnly cookies для безопасности
         const maxAge = expires_in ? expires_in * 1000 : 3600 * 1000; // 1 час по умолчанию
         
+        // Пробуем без Secure для Vercel
         const responseCookies = [
-            `access_token=${access_token}; HttpOnly; Secure; SameSite=Lax; Max-Age=${Math.floor(maxAge/1000)}; Path=/`,
-            `oauth_state=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/` // удаляем state cookie
+            `access_token=${access_token}; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(maxAge/1000)}; Path=/`,
+            `oauth_state=; HttpOnly; SameSite=Lax; Max-Age=0; Path=/` // удаляем state cookie
         ];
 
         if (refresh_token) {
-            responseCookies.push(`refresh_token=${refresh_token}; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000; Path=/`); // 30 дней
+            responseCookies.push(`refresh_token=${refresh_token}; HttpOnly; SameSite=Lax; Max-Age=2592000; Path=/`); // 30 дней
         }
 
+        console.log('🔍 [DEBUG] Setting cookies:', responseCookies);
         res.setHeader('Set-Cookie', responseCookies);
 
         console.log('✅ OAuth2 авторизация успешна');
