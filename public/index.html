@@ -1147,21 +1147,21 @@
 
         // Функция для получения бонуса
         async function claimBonus() {
+            console.log('🎁 [DEBUG] claimBonus вызван');
+            
             try {
-                if (!currentIP) {
-                    // Пробуем получить IP
-                    const response = await fetch('https://api.ipify.org?format=json');
-                    const data = await response.json();
-                    currentIP = data.ip;
-                }
-
-                if (!currentIP) {
+                if (!isLoggedIn || !currentUser) {
+                    console.log('❌ [DEBUG] Пользователь не авторизован');
+                    alert('Для получения бонуса необходимо авторизоваться!');
                     return;
                 }
 
+                const username = currentUser.username;
+                console.log('🎁 [DEBUG] Начисляем бонус для:', username);
+
                 // Добавляем 100 очков текущему пользователю
-                const username = getCurrentUsername();
                 await updatePlayerScore(username, 100);
+                console.log('✅ [DEBUG] Бонус +100 очков начислен!');
                 
                 // Отключаем кнопку и запускаем таймер
                 bonusButton.disabled = true;
