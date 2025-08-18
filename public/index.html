@@ -1417,16 +1417,18 @@
             console.log('🎰 [DEBUG] Spin clicked, isSpinning:', isSpinning);
             if (isSpinning) return;
 
-            // Проверяем IP
-            console.log('🎰 [DEBUG] Current IP:', currentIP);
-            if (!currentIP) {
-                console.log('❌ [DEBUG] IP отсутствует, выходим из spin');
+            // Получаем текущего пользователя (авторизованный или гость по IP)
+            const username = getCurrentUsername();
+            console.log('🎰 [DEBUG] Current username:', username);
+            
+            if (!username) {
+                console.log('❌ [DEBUG] Нет username (ни авторизации, ни IP)');
+                alert('Ошибка: не удалось определить пользователя');
                 return;
             }
 
-            // Получаем текущего пользователя (авторизованный или гость по IP)
-            const username = getCurrentUsername();
             const currentScore = playerScores[username] || 0;
+            console.log('🎰 [DEBUG] Current score:', currentScore);
 
             // Проверяем, достаточно ли очков
             if (currentScore < 100) {
