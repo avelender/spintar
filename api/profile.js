@@ -19,8 +19,23 @@ export default async function handler(req, res) {
             return res.status(401).json({ error: 'No access token found' });
         }
 
+        // Декодируем JWT токен для получения username
+        let username;
+        try {
+            const tokenParts = accessToken.split('.');
+            if (tokenParts.length === 3) {
+                const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
+                username = payload.username || payload.sub || payload.user;
+            }
+        } catch (error) {
+            console.log('❌ Не удалось декодировать JWT токен');
+        }
+
+        // Если не удалось получить username из токена, пробуем без параметров
+        const requestBody = username ? { username } : {};
+
         // Запрашиваем профиль пользователя через API орбитара
-        const profileResponse = await fetch('https://api.orbitar.space/api/v1/status', {
+        const profileResponse = await fetch('https://api.orbitar.space/api/v1/user/profile', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
@@ -28,7 +43,7 @@ export default async function handler(req, res) {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({})
+            body: JSON.stringify(requestBody)
         });
 
         if (!profileResponse.ok) {
