@@ -14,26 +14,39 @@ export default async function handler(req, res) {
         }, {}) || {};
 
         const accessToken = cookies.access_token;
+        console.log('🔍 [DEBUG] Access token exists:', !!accessToken);
+        console.log('🔍 [DEBUG] Access token length:', accessToken?.length);
+        console.log('🔍 [DEBUG] Token first 50 chars:', accessToken?.substring(0, 50));
 
         if (!accessToken) {
+            console.log('❌ [DEBUG] No access token found in cookies');
             return res.status(401).json({ error: 'No access token found' });
         }
 
         // Декодируем JWT токен для получения username
         let username;
+        let decodedPayload;
         try {
             const tokenParts = accessToken.split('.');
+            console.log('🔍 [DEBUG] Token parts count:', tokenParts.length);
+            
             if (tokenParts.length === 3) {
-                const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
-                username = payload.username || payload.sub || payload.user;
+                decodedPayload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
+                console.log('🔍 [DEBUG] JWT payload:', JSON.stringify(decodedPayload, null, 2));
+                
+                username = decodedPayload.username || decodedPayload.sub || decodedPayload.user;
+                console.log('🔍 [DEBUG] Extracted username:', username);
             }
         } catch (error) {
-            console.log('❌ Не удалось декодировать JWT токен');
+            console.log('❌ [DEBUG] JWT decode error:', error.message);
         }
 
         // Если не удалось получить username из токена, пробуем без параметров
         const requestBody = username ? { username } : {};
+        console.log('🔍 [DEBUG] Request body for API:', JSON.stringify(requestBody));
 
+        console.log('🚀 [DEBUG] Making API request to /api/v1/user/profile');
+        
         // Запрашиваем профиль пользователя через API орбитара
         const profileResponse = await fetch('https://api.orbitar.space/api/v1/user/profile', {
             method: 'POST',
@@ -45,6 +58,9 @@ export default async function handler(req, res) {
             },
             body: JSON.stringify(requestBody)
         });
+        
+        console.log('📡 [DEBUG] API Response status:', profileResponse.status);
+        console.log('📡 [DEBUG] API Response headers:', Object.fromEntries(profileResponse.headers.entries()));
 
         if (!profileResponse.ok) {
             const errorText = await profileResponse.text();
