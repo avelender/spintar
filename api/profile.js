@@ -20,7 +20,7 @@ export default async function handler(req, res) {
         }
 
         // Запрашиваем профиль пользователя через API орбитара
-        const profileResponse = await fetch('https://api.orbitar.space/api/v1/user', {
+        const profileResponse = await fetch('https://api.orbitar.space/api/v1/me', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
