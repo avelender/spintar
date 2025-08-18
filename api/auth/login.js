@@ -28,7 +28,7 @@ export default function handler(req, res) {
             `client_id=${encodeURIComponent(clientId)}&` +
             `redirect_uri=${encodeURIComponent(redirectUri)}&` +
             `response_type=code&` +
-            `scope=${encodeURIComponent('user status')}&` +
+            `scope=${encodeURIComponent('status')}&` +
             `state=${encodeURIComponent(state)}`;
 
         console.log('🚀 Redirecting to Orbitar OAuth2:', authUrl);
