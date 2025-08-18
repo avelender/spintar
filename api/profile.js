@@ -74,12 +74,12 @@ export default async function handler(req, res) {
         console.log('🔍 [DEBUG] Full API response:', JSON.stringify(profileData, null, 2));
         
         // Проверяем структуру ответа API
-        if (!profileData.payload || !profileData.payload.user) {
-            console.error('❌ Некорректный ответ API - отсутствует payload.user');
+        if (!profileData.payload || !profileData.payload.profile) {
+            console.error('❌ Некорректный ответ API - отсутствует payload.profile');
             return res.status(500).json({ error: 'Invalid profile data structure' });
         }
 
-        const userProfile = profileData.payload.user;
+        const userProfile = profileData.payload.profile;
         console.log('✅ Профиль пользователя получен:', userProfile.username);
 
         // Возвращаем только необходимые данные (без лишней информации)

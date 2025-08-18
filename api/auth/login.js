@@ -9,6 +9,10 @@ export default function handler(req, res) {
         const clientId = process.env.CLIENT_ID;
         const redirectUri = process.env.REDIRECT_URI;
         
+        console.log('🔍 [DEBUG] Environment variables:');
+        console.log('- CLIENT_ID:', clientId ? `${clientId.substring(0, 8)}...` : 'MISSING');
+        console.log('- REDIRECT_URI:', redirectUri);
+        
         if (!clientId || !redirectUri) {
             console.error('❌ Отсутствуют переменные окружения CLIENT_ID или REDIRECT_URI');
             return res.status(500).json({ error: 'Server configuration error' });
@@ -23,12 +27,11 @@ export default function handler(req, res) {
             `oauth_state=${state}; HttpOnly; SameSite=Lax; Max-Age=600; Path=/`
         ]);
 
-        // Формируем URL для авторизации на орбитаре
+        // Формируем URL для авторизации на орбитаре (строго по документации)
         const authUrl = `https://orbitar.space/oauth2/authorize?` +
             `client_id=${encodeURIComponent(clientId)}&` +
-            `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-            `response_type=code&` +
             `scope=${encodeURIComponent('user')}&` +
+            `redirect_uri=${encodeURIComponent(redirectUri)}&` +
             `state=${encodeURIComponent(state)}`;
 
         console.log('🚀 Redirecting to Orbitar OAuth2:', authUrl);
