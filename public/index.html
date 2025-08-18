@@ -807,34 +807,26 @@
 
         async function checkAuthStatus() {
             try {
+                console.log('🔍 [DEBUG] Запрашиваем /api/profile...');
                 const response = await fetch('/api/profile', {
                     credentials: 'include'
                 });
+                console.log('🔍 [DEBUG] Response status:', response.status);
 
                 if (response.ok) {
                     const userData = await response.json();
                     currentUser = userData;
                     isLoggedIn = true;
                     console.log('✅ Пользователь авторизован:', userData.username);
+                    console.log('🔍 [DEBUG] checkAuthStatus завершен успешно');
                 } else if (response.status === 401) {
-                    const errorData = await response.json();
-                    if (errorData.needRefresh) {
-                        // Пытаемся обновить токен
-                        const refreshResponse = await fetch('/api/auth/refresh', {
-                            method: 'POST',
-                            credentials: 'include'
-                        });
-
-                        if (refreshResponse.ok) {
-                            // Токен обновлен, пытаемся снова получить профиль
-                            return await checkAuthStatus();
-                        }
-                    }
-                    // Пользователь не авторизован
+                    console.log('🔍 [DEBUG] 401 - пользователь не авторизован');
                     currentUser = null;
                     isLoggedIn = false;
                 } else {
-                    throw new Error('Failed to check auth status');
+                    console.log('❌ [DEBUG] Неожиданный статус:', response.status);
+                    currentUser = null;
+                    isLoggedIn = false;
                 }
             } catch (error) {
                 console.error('❌ Ошибка проверки авторизации:', error);
@@ -842,34 +834,29 @@
                 isLoggedIn = false;
             }
 
+            console.log('🔄 [DEBUG] Обновляем UI...');
             updateAuthUI();
+            console.log('✅ [DEBUG] checkAuthStatus полностью завершен');
         }
 
         function updateAuthUI() {
+            console.log('🔄 [DEBUG] updateAuthUI вызван, isLoggedIn:', isLoggedIn);
             const userInfo = document.getElementById('userInfo');
             const loginPanel = document.getElementById('loginPanel');
             const userName = document.getElementById('userName');
             const userScore = document.getElementById('userScore');
-            const guestScore = document.getElementById('guestScore');
 
             if (isLoggedIn && currentUser) {
-                // Показываем информацию о пользователе
-                userInfo.style.display = 'flex';
+                console.log('🔄 [DEBUG] Показываем интерфейс авторизованного пользователя');
+                userInfo.style.display = 'block';
                 loginPanel.style.display = 'none';
+                userName.textContent = currentUser.username;
                 
-                userName.textContent = currentUser.displayName || currentUser.username;
-                const currentScore = playerScores[currentUser.username] || 0;
-                userScore.textContent = `${currentScore} очков`;
-
-                // Обновляем аватар если есть
-                const userAvatar = document.getElementById('userAvatar');
-                if (currentUser.avatar) {
-                    userAvatar.innerHTML = `<img src="${currentUser.avatar}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
-                } else {
-                    userAvatar.innerHTML = currentUser.username.charAt(0).toUpperCase();
-                }
+                const userPoints = playerScores[currentUser.username] || 0;
+                userScore.textContent = `${userPoints} очков`;
+                console.log('🔄 [DEBUG] UI обновлен для пользователя:', currentUser.username);
             } else {
-                // Показываем панель входа
+                console.log('🔄 [DEBUG] Показываем интерфейс для неавторизованного пользователя');
                 userInfo.style.display = 'none';
                 loginPanel.style.display = 'flex';
                 
@@ -884,8 +871,7 @@
             if (isLoggedIn && currentUser) {
                 return currentUser.username;
             } else {
-                // Возвращаем временный никнейм на основе IP
-                return currentIP ? currentIP.split('.').pop() : 'guest';
+                return null; // Игра только для авторизованных
             }
         }
 
@@ -1246,10 +1232,6 @@
                 // Ждем немного для загрузки Firebase модулей
                 await new Promise(resolve => setTimeout(resolve, 100));
                 
-                // Сначала получаем IP
-                await getClientIP();
-                console.log('🌍 IP получен:', currentIP);
-                
                 // Проверяем статус авторизации
                 console.log('🔍 [DEBUG] Проверяем статус авторизации...');
                 await checkAuthStatus();
@@ -1433,15 +1415,14 @@
             console.log('🎰 [DEBUG] Spin clicked, isSpinning:', isSpinning);
             if (isSpinning) return;
 
-            // Получаем текущего пользователя (авторизованный или гость по IP)
-            const username = getCurrentUsername();
-            console.log('🎰 [DEBUG] Current username:', username);
-            
-            if (!username) {
-                console.log('❌ [DEBUG] Нет username (ни авторизации, ни IP)');
-                alert('Ошибка: не удалось определить пользователя');
+            // Проверяем авторизацию пользователя
+            if (!isLoggedIn || !currentUser) {
+                alert('Для игры необходимо войти через Орбитар!');
                 return;
             }
+            
+            const username = currentUser.username;
+            console.log('🎰 [DEBUG] Current username:', username);
 
             const currentScore = playerScores[username] || 0;
             console.log('🎰 [DEBUG] Current score:', currentScore);
