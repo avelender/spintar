@@ -721,6 +721,13 @@
         // Firebase references (initialized by module script)  
         let fireDB, fireDoc, fireGetDoc, fireSetDoc, fireOnSnapshot;
         
+        // Игровые переменные
+        let currentUser = null;
+        let isLoggedIn = false;
+        let playerScores = {};
+        let isSpinning = false;
+        let bonusButton, bonusTimer;
+        
         // Initialize Firebase references when DOM is ready
         async function initializeFirebase() {
             // Ждем пока Firebase модули загрузятся
@@ -1137,8 +1144,6 @@
         }
 
         let timerInterval = null;
-        let bonusButton;
-        let bonusTimer;
 
         // Функция для получения бонуса
         async function claimBonus() {
