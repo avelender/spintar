@@ -71,21 +71,23 @@ export default async function handler(req, res) {
         }
 
         const profileData = await profileResponse.json();
+        console.log('🔍 [DEBUG] Full API response:', JSON.stringify(profileData, null, 2));
         
-        // Проверяем, что получили необходимые данные
-        if (!profileData.username) {
-            console.error('❌ Некорректный ответ API - отсутствует username');
-            return res.status(500).json({ error: 'Invalid profile data' });
+        // Проверяем структуру ответа API
+        if (!profileData.payload || !profileData.payload.user) {
+            console.error('❌ Некорректный ответ API - отсутствует payload.user');
+            return res.status(500).json({ error: 'Invalid profile data structure' });
         }
 
-        console.log('✅ Профиль пользователя получен:', profileData.username);
+        const userProfile = profileData.payload.user;
+        console.log('✅ Профиль пользователя получен:', userProfile.username);
 
         // Возвращаем только необходимые данные (без лишней информации)
         res.status(200).json({
-            username: profileData.username,
-            displayName: profileData.display_name || profileData.username,
-            avatar: profileData.avatar_url || null,
-            id: profileData.id
+            username: userProfile.username,
+            displayName: userProfile.display_name || userProfile.username,
+            avatar: userProfile.avatar_url || null,
+            id: userProfile.id
         });
 
     } catch (error) {
