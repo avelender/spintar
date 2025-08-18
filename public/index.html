@@ -848,22 +848,29 @@
 
             if (isLoggedIn && currentUser) {
                 console.log('🔄 [DEBUG] Показываем интерфейс авторизованного пользователя');
-                userInfo.style.display = 'block';
-                loginPanel.style.display = 'none';
-                userName.textContent = currentUser.username;
                 
-                const userPoints = playerScores[currentUser.username] || 0;
-                userScore.textContent = `${userPoints} очков`;
-                console.log('🔄 [DEBUG] UI обновлен для пользователя:', currentUser.username);
+                try {
+                    userInfo.style.display = 'block';
+                    console.log('✅ [DEBUG] userInfo показан');
+                    
+                    loginPanel.style.display = 'none';
+                    console.log('✅ [DEBUG] loginPanel скрыт');
+                    
+                    userName.textContent = currentUser.username;
+                    console.log('✅ [DEBUG] username установлен');
+                    
+                    const userPoints = playerScores[currentUser.username] || 0;
+                    userScore.textContent = `${userPoints} очков`;
+                    console.log('✅ [DEBUG] очки установлены:', userPoints);
+                    
+                    console.log('🔄 [DEBUG] UI обновлен для пользователя:', currentUser.username);
+                } catch (error) {
+                    console.error('❌ [DEBUG] Ошибка в updateAuthUI:', error);
+                }
             } else {
                 console.log('🔄 [DEBUG] Показываем интерфейс для неавторизованного пользователя');
                 userInfo.style.display = 'none';
                 loginPanel.style.display = 'flex';
-                
-                // Показываем очки гостя (по IP)
-                const tempUsername = currentIP ? currentIP.split('.').pop() : 'guest';
-                const guestPoints = playerScores[tempUsername] || 0;
-                guestScore.textContent = `${guestPoints} очков`;
             }
         }
 
