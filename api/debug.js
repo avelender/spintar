@@ -25,8 +25,14 @@ export default async function handler(req, res) {
                 accessTokenStart: accessToken?.substring(0, 20) + '...',
                 allCookieKeys: Object.keys(cookies)
             },
+            environment: {
+                CLIENT_ID: process.env.CLIENT_ID?.substring(0, 8) + '...',
+                CLIENT_SECRET: !!process.env.CLIENT_SECRET,
+                REDIRECT_URI: process.env.REDIRECT_URI
+            },
             jwt: null,
-            apiTest: null
+            apiTest: null,
+            callbackTest: null
         };
         
         // Декодируем JWT если есть
@@ -96,6 +102,21 @@ export default async function handler(req, res) {
             } catch (error) {
                 debugInfo.apiTest = { error: error.message };
             }
+        }
+        
+        // Тестируем callback endpoint
+        try {
+            const callbackResponse = await fetch(`https://spintar.vercel.app/api/auth/callback?test=true`);
+            debugInfo.callbackTest = {
+                status: callbackResponse.status,
+                statusText: callbackResponse.statusText,
+                accessible: callbackResponse.ok
+            };
+        } catch (error) {
+            debugInfo.callbackTest = {
+                error: error.message,
+                accessible: false
+            };
         }
         
         console.log('🔧 [DEBUG] Debug info collected:', JSON.stringify(debugInfo, null, 2));
