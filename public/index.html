@@ -506,10 +506,11 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 6px 10px;
-            margin-bottom: 4px;
-            background: var(--container-bg);
+            padding: 4px 8px;
+            margin: 2px 0;
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 6px;
+            font-size: 13px;
             transition: background-color 0.3s ease;
         }
 
@@ -1214,8 +1215,8 @@
                     return `
                         <div class="leaderboard-item">
                             <span class="rank">${medal}</span>
-                            <span class="username">@${username}</span>
-                            <span class="score">${score} pts</span>
+                            <span class="username">${username}</span>
+                            <span class="score">${score}</span>
                         </div>
                     `;
                 }).join('');
