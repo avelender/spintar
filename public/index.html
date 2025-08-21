@@ -1640,13 +1640,22 @@
             const reelWidth = 80;    // Ширина барабана
             const symbolHeight = 60;  // Высота символа
             const reelGap = 10;      // Расстояние между барабанами
-            const offsetX = 10;      // Уменьшили смещение по X с 15 до 10
-            const offsetY = 15;      // Уменьшили смещение по Y с 20 до 15
+            const offsetX = 20;      // Увеличиваем смещение по X для компенсации центрирования
+            const offsetY = 15;      // Смещение по Y
 
             // Функция для получения координат центра символа
             function getSymbolCenter(col, row) {
-                const x = col * (reelWidth + reelGap) + offsetX + reelWidth/2;
-                const y = row * symbolHeight + offsetY + symbolHeight/2;
+                // Получаем реальные размеры контейнера барабанов
+                const reelsContainer = document.querySelector('.reels');
+                const containerRect = reelsContainer.getBoundingClientRect();
+                const svgRect = document.getElementById('winLines').getBoundingClientRect();
+                
+                // Рассчитываем смещение относительно SVG
+                const deltaX = containerRect.left - svgRect.left;
+                const deltaY = containerRect.top - svgRect.top;
+                
+                const x = col * (reelWidth + reelGap) + deltaX + reelWidth/2;
+                const y = row * symbolHeight + deltaY + symbolHeight/2;
                 return { x, y };
             }
 
