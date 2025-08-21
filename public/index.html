@@ -88,47 +88,90 @@
         }
 
         body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
             margin: 0;
             background: var(--bg-color);
             font-family: Arial, sans-serif;
             color: var(--text-color);
             transition: all 0.3s ease;
+            overflow-x: hidden;
+        }
+
+        .game-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
         }
 
         .game-container {
             display: flex;
-            gap: 30px;
-            align-items: flex-start;
-            padding: 20px;
-            max-height: 100vh;
+            gap: 15px;
+            padding: 10px;
             box-sizing: border-box;
+            align-items: flex-start;
+            width: 100%;
+            max-width: 1200px;
+            overflow-x: hidden;
+        }
+
+        .history-container {
+            flex: 0 0 180px;
+            min-height: 300px;
+        }
+
+        .center-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 350px;
+            max-width: 500px;
+            align-items: center;
+        }
+
+        .slot-machine {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .price-list {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .scores-table {
+            flex: 0 0 180px;
+            min-height: 300px;
         }
 
         .price-list {
             background: var(--container-bg);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 8px;
             box-shadow: 0 2px 5px var(--shadow-color);
-            width: 280px;
             height: fit-content;
         }
 
-        .price-category {
-            margin-bottom: 12px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 8px;
+        .price-categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: space-between;
         }
 
-        .price-category:last-child {
-            margin-bottom: 0;
-            border-bottom: none;
-            padding-bottom: 0;
+        .price-category {
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+            padding: 6px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-color);
+        }
+
+        .price-category h4 {
+            margin: 0 0 5px 0;
+            font-size: 12px;
+            color: var(--accent-color);
         }
 
         .price-category-title {
@@ -139,18 +182,21 @@
         }
 
         .price-items {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            font-size: 13px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
         }
 
         .price-item {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            padding: 4px;
-            border-radius: 5px;
+            gap: 3px;
+            font-size: 11px;
             background: var(--bg-color);
+            padding: 3px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
         }
 
         .price-item span {
@@ -280,7 +326,6 @@
             border-radius: 10px;
             box-shadow: 0 2px 5px var(--shadow-color);
             color: var(--text-color);
-            width: 280px;
         }
 
         .scores-table h2 {
@@ -364,7 +409,6 @@
             border-radius: 10px;
             box-shadow: 0 2px 5px var(--shadow-color);
             color: var(--text-color);
-            width: 280px;
             height: fit-content;
             max-height: var(--price-list-height, fit-content);
             display: flex;
@@ -512,11 +556,19 @@
             top: 15px;
             right: 15px;
             z-index: 1000;
-            background: var(--bg-color);
-            border-radius: 12px;
+            background: var(--container-bg);
+            border-radius: 8px;
             padding: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 2px 5px var(--shadow-color);
             border: 2px solid var(--border-color);
+        }
+        
+        @media (max-width: 1200px) {
+            .auth-panel {
+                position: static !important;
+                margin: 0 auto 20px auto;
+                width: fit-content;
+            }
         }
 
         .user-info, .login-panel {
@@ -615,6 +667,87 @@
             cursor: pointer;
             z-index: 1001;
         }
+
+        /* Media queries для адаптивности */
+        @media (max-width: 1000px) {
+            .game-container {
+                flex-direction: column;
+                gap: 10px;
+                padding: 8px;
+            }
+            
+            .history-container, .scores-table {
+                flex: none;
+                min-height: auto;
+                width: 100%;
+            }
+            
+            .center-column {
+                min-width: auto;
+                max-width: none;
+                align-items: stretch;
+            }
+            
+            .slot-machine {
+                max-width: none;
+            }
+            
+            .price-list {
+                max-width: none;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .game-container {
+                padding: 5px;
+                gap: 8px;
+            }
+            
+            .history-container, .scores-table {
+                min-height: 150px;
+            }
+            
+            .price-categories {
+                gap: 5px;
+            }
+            
+            .price-category {
+                min-width: 80px;
+                padding: 4px;
+            }
+            
+            .price-category h4 {
+                font-size: 10px;
+                margin-bottom: 3px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 10px;
+                gap: 15px;
+            }
+            
+            .price-categories {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .price-category {
+                min-width: auto;
+            }
+            
+            .price-item {
+                font-size: 11px;
+                padding: 4px 6px;
+                gap: 3px;
+            }
+            
+            .price-category h4 {
+                font-size: 13px;
+                margin-bottom: 8px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -640,91 +773,101 @@
             <span class="theme-text">Light</span>
         </div>
     </div>
-    <div class="game-container">
-        <div class="price-list">
-            <div class="price-category">
-                <div class="price-category-title">Gaming (25)</div>
-                <div class="price-items">
-                    <div class="price-item"><span>🎮</span><span class="points">25</span></div>
-                    <div class="price-item"><span>🎲</span><span class="points">25</span></div>
-                    <div class="price-item"><span>🎯</span><span class="points">25</span></div>
-                    <div class="price-item"><span>🎱</span><span class="points">25</span></div>
-                    <div class="price-item"><span>🎳</span><span class="points">25</span></div>
+    <div class="game-wrapper">
+        <div class="game-container">
+        <!-- Левая колонка: История -->
+        <div class="history-container">
+            <h2 class="history-title">History</h2>
+            <div class="history-list" id="historyList"></div>
+        </div>
+
+        <!-- Центральная колонка: Барабаны + Прайс-лист -->
+        <div class="center-column">
+            <div class="slot-machine">
+                <div class="reels">
+                    <div class="reel">
+                        <div class="reel-strip"></div>
+                    </div>
+                    <div class="reel">
+                        <div class="reel-strip"></div>
+                    </div>
+                    <div class="reel">
+                        <div class="reel-strip"></div>
+                    </div>
+                    <svg id="winLines"></svg>
+                </div>
+                <div class="controls">
+                    <button class="spin-button">Spin</button>
+                    <div class="bonus-group">
+                        <button class="bonus-button" id="bonusButton">Get Bonus</button>
+                        <div class="bonus-timer" id="bonusTimer"></div>
+                    </div>
                 </div>
             </div>
-            <div class="price-category">
-                <div class="price-category-title">Music (50)</div>
-                <div class="price-items">
-                    <div class="price-item"><span>🎼</span><span class="points">50</span></div>
-                    <div class="price-item"><span>🎵</span><span class="points">50</span></div>
-                    <div class="price-item"><span>🎸</span><span class="points">50</span></div>
-                    <div class="price-item"><span>🎺</span><span class="points">50</span></div>
-                    <div class="price-item"><span>🎷</span><span class="points">50</span></div>
-                    <div class="price-item"><span>🎹</span><span class="points">50</span></div>
-                    <div class="price-item"><span>🎻</span><span class="points">50</span></div>
-                </div>
-            </div>
-            <div class="price-category">
-                <div class="price-category-title">Entertainment (75)</div>
-                <div class="price-items">
-                    <div class="price-item"><span>🎬</span><span class="points">75</span></div>
-                    <div class="price-item"><span>🎪</span><span class="points">75</span></div>
-                    <div class="price-item"><span>🎨</span><span class="points">75</span></div>
-                    <div class="price-item"><span>🎭</span><span class="points">75</span></div>
-                </div>
-            </div>
-            <div class="price-category">
-                <div class="price-category-title">Nature (125)</div>
-                <div class="price-items">
-                    <div class="price-item"><span>🌟</span><span class="points">125</span></div>
-                    <div class="price-item"><span>💫</span><span class="points">125</span></div>
-                    <div class="price-item"><span>⭐</span><span class="points">125</span></div>
-                    <div class="price-item"><span>🌙</span><span class="points">125</span></div>
-                    <div class="price-item"><span>☀️</span><span class="points">125</span></div>
-                    <div class="price-item"><span>🌈</span><span class="points">125</span></div>
-                </div>
-            </div>
-            <div class="price-category">
-                <div class="price-category-title">Luck (250-500)</div>
-                <div class="price-items">
-                    <div class="price-item"><span>🍀</span><span class="points">250</span></div>
-                    <div class="price-item"><span>🎋</span><span class="points">250</span></div>
-                    <div class="price-item"><span>🎍</span><span class="points">250</span></div>
-                    <div class="price-item"><span>🎰</span><span class="points">500</span></div>
+
+            <!-- Прайс-лист без заголовка -->
+            <div class="price-list">
+                <div class="price-categories">
+                    <div class="price-category">
+                        <h4>Gaming (25)</h4>
+                        <div class="price-items">
+                            <div class="price-item"><span>🎮</span><span class="points">25</span></div>
+                            <div class="price-item"><span>🕹️</span><span class="points">25</span></div>
+                            <div class="price-item"><span>🎲</span><span class="points">25</span></div>
+                            <div class="price-item"><span>⚪</span><span class="points">25</span></div>
+                            <div class="price-item"><span>🔘</span><span class="points">25</span></div>
+                        </div>
+                    </div>
+                    <div class="price-category">
+                        <h4>Music (50)</h4>
+                        <div class="price-items">
+                            <div class="price-item"><span>🎵</span><span class="points">50</span></div>
+                            <div class="price-item"><span>🎶</span><span class="points">50</span></div>
+                            <div class="price-item"><span>🎸</span><span class="points">50</span></div>
+                            <div class="price-item"><span>🎹</span><span class="points">50</span></div>
+                            <div class="price-item"><span>🎤</span><span class="points">50</span></div>
+                        </div>
+                    </div>
+                    <div class="price-category">
+                        <h4>Entertainment (75)</h4>
+                        <div class="price-items">
+                            <div class="price-item"><span>🎬</span><span class="points">75</span></div>
+                            <div class="price-item"><span>🎭</span><span class="points">75</span></div>
+                            <div class="price-item"><span>🎪</span><span class="points">75</span></div>
+                            <div class="price-item"><span>🎨</span><span class="points">75</span></div>
+                        </div>
+                    </div>
+                    <div class="price-category">
+                        <h4>Nature (125)</h4>
+                        <div class="price-items">
+                            <div class="price-item"><span>💚</span><span class="points">125</span></div>
+                            <div class="price-item"><span>👁️</span><span class="points">125</span></div>
+                            <div class="price-item"><span>⭐</span><span class="points">125</span></div>
+                            <div class="price-item"><span>🌙</span><span class="points">125</span></div>
+                            <div class="price-item"><span>🌻</span><span class="points">125</span></div>
+                            <div class="price-item"><span>🌈</span><span class="points">125</span></div>
+                        </div>
+                    </div>
+                    <div class="price-category">
+                        <h4>Luck (250-500)</h4>
+                        <div class="price-items">
+                            <div class="price-item"><span>💚</span><span class="points">250</span></div>
+                            <div class="price-item"><span>🧚</span><span class="points">250</span></div>
+                            <div class="price-item"><span>👑</span><span class="points">250</span></div>
+                            <div class="price-item"><span>📱</span><span class="points">500</span></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="slot-machine">
-            <div class="reels">
-                <div class="reel">
-                    <div class="reel-strip"></div>
-                </div>
-                <div class="reel">
-                    <div class="reel-strip"></div>
-                </div>
-                <div class="reel">
-                    <div class="reel-strip"></div>
-                </div>
-                <svg id="winLines"></svg>
-            </div>
-            <div class="controls">
-                <button class="spin-button">Spin</button>
-                <div class="bonus-group">
-                    <button class="bonus-button" id="bonusButton">Get Bonus</button>
-                    <div class="bonus-timer" id="bonusTimer"></div>
-                </div>
-            </div>
-        </div>
+
+        <!-- Правая колонка: Highscores -->
         <div class="scores-table">
             <h2>🏆 Highscores</h2>
             <div id="leaderboard">
                 <div class="no-scores">No players yet</div>
             </div>
         </div>
-
-        <div class="history-container">
-            <h2 class="history-title">History</h2>
-            <div class="history-list" id="historyList"></div>
         </div>
     </div>
 
