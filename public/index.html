@@ -1645,17 +1645,8 @@
 
             // Функция для получения координат центра символа
             function getSymbolCenter(col, row) {
-                // Получаем реальные размеры контейнера барабанов
-                const reelsContainer = document.querySelector('.reels');
-                const containerRect = reelsContainer.getBoundingClientRect();
-                const svgRect = document.getElementById('winLines').getBoundingClientRect();
-                
-                // Рассчитываем смещение относительно SVG
-                const deltaX = containerRect.left - svgRect.left;
-                const deltaY = containerRect.top - svgRect.top;
-                
-                const x = col * (reelWidth + reelGap) + deltaX + reelWidth/2;
-                const y = row * symbolHeight + deltaY + symbolHeight/2;
+                const x = col * (reelWidth + reelGap) + 90 + reelWidth/2; // Еще больше смещение - 90
+                const y = row * symbolHeight + 35 + symbolHeight/2; // Y смещение 35
                 return { x, y };
             }
 
