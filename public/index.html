@@ -1114,7 +1114,7 @@
                 
                 // Запускаем таймер
                 startBonusTimer(nextBonusTime);
-                addHistoryItem('bonus', `Bonus received: +100 points`);
+                addHistoryItem('bonus', `Bonus received: +100`);
             } catch (error) {
                 activateBonus(); // В случае ошибки активируем кнопку
             }
@@ -1585,14 +1585,14 @@
                 // Показываем чистый выигрыш (за вычетом стоимости спина)
                 const netWin = winnings - 100;
                 if (netWin > 0) {
-                    addHistoryItem('win', `Win: +${netWin} points`);
+                    addHistoryItem('win', `Win: +${netWin}`);
                 } else if (netWin === 0) {
-                    addHistoryItem('loss', `Break even: 0 points`);
+                    addHistoryItem('loss', `Break even: 0`);
                 } else {
-                    addHistoryItem('loss', `Lost spin: ${netWin} points`);
+                    addHistoryItem('loss', `Lost spin: ${netWin}`);
                 }
             } else {
-                addHistoryItem('loss', `Lost spin: -100 points`);
+                addHistoryItem('loss', `Lost spin: -100`);
             }
         }
 
