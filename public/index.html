@@ -671,12 +671,12 @@
                         </div>
                     </div>
                     <div class="price-category">
-                        <h4>Luck (250-500)</h4>
+                        <h4>Luck (150-300)</h4>
                         <div class="price-items">
-                            <div class="price-item"><span>🍀</span><span class="points">250</span></div>
-                            <div class="price-item"><span>🎋</span><span class="points">250</span></div>
-                            <div class="price-item"><span>🎍</span><span class="points">250</span></div>
-                            <div class="price-item"><span>🎰</span><span class="points">500</span></div>
+                            <div class="price-item"><span>🍀</span><span class="points">150</span></div>
+                            <div class="price-item"><span>🎋</span><span class="points">150</span></div>
+                            <div class="price-item"><span>🎍</span><span class="points">150</span></div>
+                            <div class="price-item"><span>🎰</span><span class="points">300</span></div>
                         </div>
                     </div>
                 </div>
@@ -1051,7 +1051,9 @@
             if (!username) return;
             
             if (!playerScores[username]) {
-                playerScores[username] = 0;
+                // Новый игрок получает стартовые 500 очков
+                playerScores[username] = 500;
+                console.log('🎉 Новый игрок! Стартовые 500 очков для:', username);
             }
             playerScores[username] += points;
             
@@ -1103,8 +1105,8 @@
                 // Отключаем кнопку и запускаем таймер
                 bonusButton.disabled = true;
                 
-                // Генерируем случайное время ожидания (15-120 секунд)
-                const waitTime = getRandomInt(15, 120);
+                // Генерируем случайное время ожидания (30-180 секунд)
+                const waitTime = getRandomInt(30, 180);
                 const nextBonusTime = Date.now() + (waitTime * 1000);
                 
                 // Сохраняем время следующего бонуса
@@ -1284,10 +1286,10 @@
             '🌙': 125,
             '☀️': 125,
             '🌈': 125,
-            '🍀': 250, // Luck
-            '🎋': 250,
-            '🎍': 250,
-            '🎰': 500 // Jackpot
+            '🍀': 150, // Luck (снижено с 250)
+            '🎋': 150, // (снижено с 250)
+            '🎍': 150, // (снижено с 250)
+            '🎰': 300 // Jackpot (снижено с 500)
         };
 
         let emojis = Object.keys(emojiPrices);
