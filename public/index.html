@@ -1051,9 +1051,9 @@
             if (!username) return;
             
             if (!playerScores[username]) {
-                // Новый игрок получает стартовые 500 очков
-                playerScores[username] = 500;
-                console.log('🎉 Новый игрок! Стартовые 500 очков для:', username);
+                // Новый игрок получает стартовые 1000 очков
+                playerScores[username] = 1000;
+                console.log('🎉 Новый игрок! Стартовые 1000 очков для:', username);
             }
             playerScores[username] += points;
             
@@ -1098,9 +1098,9 @@
                 const username = currentUser.username;
                 console.log('🎁 [DEBUG] Начисляем бонус для:', username);
 
-                // Добавляем 100 очков текущему пользователю
-                await updatePlayerScore(username, 100);
-                console.log('✅ [DEBUG] Бонус +100 очков начислен!');
+                // Добавляем 200 очков текущему пользователю
+                await updatePlayerScore(username, 200);
+                console.log('✅ [DEBUG] Бонус +200 очков начислен!');
                 
                 // Отключаем кнопку и запускаем таймер
                 bonusButton.disabled = true;
@@ -1114,7 +1114,7 @@
                 
                 // Запускаем таймер
                 startBonusTimer(nextBonusTime);
-                addHistoryItem('bonus', `Bonus received: +100`);
+                addHistoryItem('bonus', `Bonus received: +200`);
             } catch (error) {
                 activateBonus(); // В случае ошибки активируем кнопку
             }
