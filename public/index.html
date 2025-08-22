@@ -1098,9 +1098,9 @@
                 const username = currentUser.username;
                 console.log('🎁 [DEBUG] Начисляем бонус для:', username);
 
-                // Добавляем 200 очков текущему пользователю
-                await updatePlayerScore(username, 200);
-                console.log('✅ [DEBUG] Бонус +200 очков начислен!');
+                // Добавляем 500 очков текущему пользователю
+                await updatePlayerScore(username, 500);
+                console.log('✅ [DEBUG] Бонус +500 очков начислен!');
                 
                 // Отключаем кнопку и запускаем таймер
                 bonusButton.disabled = true;
@@ -1114,7 +1114,7 @@
                 
                 // Запускаем таймер
                 startBonusTimer(nextBonusTime);
-                addHistoryItem('bonus', `Bonus received: +200`);
+                addHistoryItem('bonus', `Bonus received: +500`);
             } catch (error) {
                 activateBonus(); // В случае ошибки активируем кнопку
             }
