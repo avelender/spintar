@@ -698,7 +698,6 @@
     <!-- Блок авторизации -->
     <div class="auth-panel" id="authPanel">
         <div class="user-info" id="userInfo" style="display: none;">
-            <div class="user-avatar" id="userAvatar">👤</div>
             <div class="user-details">
                 <div class="user-name" id="userName">Guest</div>
                 <div class="user-score" id="userScore">0 points</div>
@@ -709,6 +708,7 @@
             <div class="guest-info">
                 <span>👤 Playing as guest</span>
                 <div class="guest-score" id="guestScore">0 points</div>
+{{ ... }}
             </div>
             <button class="login-btn" onclick="login()">Login via Orbitar</button>
         </div>
@@ -1595,8 +1595,8 @@
                 const symbolRect = symbol.getBoundingClientRect();
                 
                 // Координаты центра символа относительно SVG canvas (который начинается от .reels)
-                const x = symbolRect.left - reelsRect.left + symbolRect.width / 2 + 15; // смещение на 15px правее
-                const y = symbolRect.top - reelsRect.top + symbolRect.height / 2 - 6; // смещение на 6px выше
+                const x = symbolRect.left - reelsRect.left + symbolRect.width / 2 + 18; // смещение на 18px правее
+                const y = symbolRect.top - reelsRect.top + symbolRect.height / 2 - 8; // смещение на 8px выше
                 
                 return { x, y };
             }
