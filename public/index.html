@@ -507,7 +507,7 @@
                 margin: 0 auto;
             }
             
-            /* Порядок на мобильных: барабаны, прайс-лист, история, рейтинг */
+            /* Порядок на мобильных: барабаны, история, прайс-лист, рейтинг */
             .slot-machine-container {
                 order: 1;
                 flex: none;
@@ -527,14 +527,14 @@
             }
             
             .price-list {
-                order: 1;
+                order: 2;
                 max-width: 100%;
                 width: 100%;
                 box-sizing: border-box;
             }
             
             .history-container {
-                order: 2;
+                order: 1;
                 flex: none;
                 min-height: auto;
                 width: 100%;
@@ -731,8 +731,14 @@
             </div>
         </div>
 
-        <!-- Центральная колонка: Прайс-лист + История -->
+        <!-- Центральная колонка: История + Прайс-лист -->
         <div class="center-column">
+            <!-- История в центральной колонке -->
+            <div class="history-container">
+                <h2 class="history-title">History</h2>
+                <div class="history-list" id="historyList"></div>
+            </div>
+
             <!-- Прайс-лист без заголовка -->
             <div class="price-list">
                 <div class="price-categories">
@@ -788,12 +794,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- История в центральной колонке -->
-            <div class="history-container">
-                <h2 class="history-title">History</h2>
-                <div class="history-list" id="historyList"></div>
             </div>
         </div>
 
