@@ -115,8 +115,19 @@
             min-width: 0;
         }
 
+        .slot-machine-container {
+            flex: 0 0 320px;
+            min-height: 300px;
+            background: var(--container-bg);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            color: var(--text-color);
+            height: fit-content;
+        }
+
         .history-container {
-            flex: 0 0 180px;
+            flex: 0 0 200px;
             min-height: 300px;
         }
 
@@ -126,13 +137,13 @@
             flex-direction: column;
             gap: 10px;
             min-width: 0;
-            max-width: 500px;
+            max-width: 300px;
             align-items: center;
         }
 
-        .slot-machine{width:100%;max-width:400px;background:var(--container-bg);padding:20px;border-radius:10px;box-shadow:0 2px 5px var(--shadow-color);text-align:center;margin-bottom:20px;position:relative}.reels{display:flex;gap:10px;margin-bottom:20px;position:relative;justify-content:center;padding:10px}.reel{width:80px;height:180px;background:white;border-radius:5px;overflow:hidden;position:relative}.reel-strip{position:absolute;width:100%;left:0;top:0;display:flex;flex-direction:column;align-items:center}.emoji-symbol{width:80px;height:60px;display:flex;align-items:center;justify-content:center;font-size:40px;flex-shrink:0}
+        .slot-machine{width:100%;max-width:100%;background:transparent;padding:0;border-radius:0;box-shadow:none;text-align:center;margin-bottom:0;position:relative}.reels{display:flex;gap:10px;margin-bottom:20px;position:relative;justify-content:center;padding:10px}.reel{width:80px;height:180px;background:white;border-radius:5px;overflow:hidden;position:relative}.reel-strip{position:absolute;width:100%;left:0;top:0;display:flex;flex-direction:column;align-items:center}.emoji-symbol{width:80px;height:60px;display:flex;align-items:center;justify-content:center;font-size:40px;flex-shrink:0}
 
-        .price-list{width:100%;max-width:500px;background:var(--container-bg);padding:10px;border-radius:8px;box-shadow:0 2px 5px var(--shadow-color);height:fit-content}.price-categories{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}.price-category{flex:1;min-width:120px;text-align:center;padding:6px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-color)}.price-category h4{margin:0 0 5px 0;font-size:13px;color:var(--accent-color)}.price-category-title{font-size:14px;color:var(--title-color);margin-bottom:8px;font-weight:bold}.price-items{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}.price-item{display:inline-flex;align-items:center;gap:3px;font-size:13px;background:var(--bg-color);padding:4px 7px;border-radius:4px;border:1px solid var(--border-color)}.price-item span{margin-right:5px}.price-item .points{color:#28a745;font-size:14px}
+        .price-list{width:100%;max-width:100%;background:var(--container-bg);padding:10px;border-radius:8px;box-shadow:0 2px 5px var(--shadow-color);height:fit-content}.price-categories{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}.price-category{flex:1;min-width:120px;text-align:center;padding:6px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-color)}.price-category h4{margin:0 0 5px 0;font-size:13px;color:var(--accent-color)}.price-category-title{font-size:14px;color:var(--title-color);margin-bottom:8px;font-weight:bold}.price-items{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}.price-item{display:inline-flex;align-items:center;gap:3px;font-size:13px;background:var(--bg-color);padding:4px 7px;border-radius:4px;border:1px solid var(--border-color)}.price-item span{margin-right:5px}.price-item .points{color:#28a745;font-size:14px}
 
         .scores-table{flex:0 0 180px;min-height:300px}
 
@@ -235,14 +246,17 @@
 
         .history-container {
             background: var(--container-bg);
-            padding: 15px;
-            border-radius: 10px;
+            padding: 10px;
+            border-radius: 8px;
             box-shadow: 0 2px 5px var(--shadow-color);
             color: var(--text-color);
             height: fit-content;
             max-height: var(--price-list-height, fit-content);
             display: flex;
             flex-direction: column;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .history-list {
@@ -327,12 +341,15 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 4px 8px;
-            margin: 2px 0;
+            padding: 0 6px;
+            margin: 0;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
+            border-radius: 3px;
             font-size: 13px;
             transition: background-color 0.3s ease;
+            line-height: 1;
+            height: 16px;
+            min-height: 16px;
         }
 
         .leaderboard-item:hover {
@@ -350,8 +367,8 @@
         }
 
         .leaderboard-item .username {
-            flex: 0 1 120px;
-            margin: 0 10px;
+            flex: 0 1 100px;
+            margin: 0 6px;
             font-weight: 500;
             color: var(--title-color);
             overflow: hidden;
@@ -502,7 +519,34 @@
                 margin: 0 auto;
             }
             
-            .history-container, .scores-table {
+            /* Порядок на мобильных: барабаны, прайс-лист, история, рейтинг */
+            .slot-machine-container {
+                order: 1;
+                flex: none;
+                min-height: auto;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                padding: 10px;
+            }
+            
+            .center-column {
+                order: 2;
+                min-width: 0;
+                max-width: 100%;
+                align-items: stretch;
+                width: 100%;
+            }
+            
+            .price-list {
+                order: 1;
+                max-width: 100%;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            
+            .history-container {
+                order: 2;
                 flex: none;
                 min-height: auto;
                 width: 100%;
@@ -510,20 +554,16 @@
                 box-sizing: border-box;
             }
             
-            .center-column {
-                min-width: 0;
-                max-width: 100%;
-                align-items: stretch;
+            .scores-table {
+                order: 3;
+                flex: none;
+                min-height: auto;
                 width: 100%;
-            }
-            
-            .slot-machine {
                 max-width: 100%;
-                width: 100%;
                 box-sizing: border-box;
             }
             
-            .price-list {
+            .slot-machine {
                 max-width: 100%;
                 width: 100%;
                 box-sizing: border-box;
@@ -679,14 +719,8 @@
     </div>
     <div class="game-wrapper">
         <div class="game-container">
-        <!-- Левая колонка: История -->
-        <div class="history-container">
-            <h2 class="history-title">History</h2>
-            <div class="history-list" id="historyList"></div>
-        </div>
-
-        <!-- Центральная колонка: Барабаны + Прайс-лист -->
-        <div class="center-column">
+        <!-- Левая колонка: Барабаны -->
+        <div class="slot-machine-container">
             <div class="slot-machine">
                 <div class="reels">
                     <div class="reel">
@@ -708,7 +742,10 @@
                     </div>
                 </div>
             </div>
+        </div>
 
+        <!-- Центральная колонка: Прайс-лист + История -->
+        <div class="center-column">
             <!-- Прайс-лист без заголовка -->
             <div class="price-list">
                 <div class="price-categories">
@@ -765,6 +802,12 @@
                     </div>
                 </div>
             </div>
+
+            <!-- История в центральной колонке -->
+            <div class="history-container">
+                <h2 class="history-title">History</h2>
+                <div class="history-list" id="historyList"></div>
+            </div>
         </div>
 
         <!-- Правая колонка: Highscores -->
@@ -773,7 +816,6 @@
             <div id="leaderboard">
                 <div class="no-scores">No players yet</div>
             </div>
-        </div>
         </div>
     </div>
 
