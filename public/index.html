@@ -337,6 +337,26 @@
 
 
         /* Стили для рейтинга */
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .theme-switch {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            background: var(--border-color);
+            color: var(--text-color);
+            font-size: 12px;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
         .leaderboard-item {
             display: flex;
             align-items: center;
@@ -690,7 +710,13 @@
                 <div class="user-name" id="userName">Guest</div>
                 <div class="user-score" id="userScore">0 points</div>
             </div>
-            <button class="logout-btn" onclick="logout()">Logout</button>
+            <div class="user-actions">
+                <button class="logout-btn" onclick="logout()">Logout</button>
+                <div class="theme-switch" onclick="toggleTheme()">
+                    <span class="theme-icon">☀️</span>
+                    <span class="theme-text">Light</span>
+                </div>
+            </div>
         </div>
         <div class="login-panel" id="loginPanel">
             <div class="guest-info">
@@ -698,10 +724,10 @@
                 <div class="guest-score" id="guestScore">0 points</div>
             </div>
             <button class="login-btn" onclick="login()">Login via Orbitar</button>
-        </div>
-        <div class="theme-switch" onclick="toggleTheme()">
-            <span class="theme-icon">☀️</span>
-            <span class="theme-text">Light</span>
+            <div class="theme-switch" onclick="toggleTheme()">
+                <span class="theme-icon">☀️</span>
+                <span class="theme-text">Light</span>
+            </div>
         </div>
     </div>
     <div class="game-wrapper">
