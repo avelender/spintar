@@ -1539,8 +1539,10 @@
                 // Останавливаем барабан через определенное время
                 setTimeout(() => {
                     strip.classList.remove('spinning');
-                    // Генерируем случайную позицию остановки (0, 60 или 120 пикселей)
-                    const stopPosition = Math.floor(Math.random() * 3) * 60;
+                    // Получаем реальную высоту символа для правильного позиционирования
+                    const symbolHeight = strip.children[0] ? parseInt(getComputedStyle(strip.children[0]).height) : 60;
+                    // Генерируем случайную позицию остановки (0, 1 или 2 символа)
+                    const stopPosition = Math.floor(Math.random() * 3) * symbolHeight;
                     strip.style.transform = `translateY(-${stopPosition}px)`;
                     
                     // Если это последний барабан
@@ -1559,7 +1561,9 @@
             const reelStrips = document.querySelectorAll('.reel-strip');
             const symbols = Array.from(reelStrips).map(strip => {
                 const visibleSymbols = [];
-                const offset = Math.abs(parseInt(strip.style.transform?.match(/-?\d+/)?.[0] || '0')) / 60;
+                // Получаем реальную высоту символа из первого элемента
+                const symbolHeight = strip.children[0] ? parseInt(getComputedStyle(strip.children[0]).height) : 60;
+                const offset = Math.abs(parseInt(strip.style.transform?.match(/-?\d+/)?.[0] || '0')) / symbolHeight;
                 for(let i = 0; i < 3; i++) {
                     const symbol = strip.children[i + Math.floor(offset)];
                     if(symbol) {
@@ -1571,17 +1575,29 @@
 
             let winnings = 0;
 
-            // Константы для позиционирования
-            const reelWidth = 80;    // Ширина барабана
-            const symbolHeight = 60;  // Высота символа
-            const reelGap = 10;      // Расстояние между барабанами
-            const offsetX = 20;      // Увеличиваем смещение по X для компенсации центрирования
-            const offsetY = 15;      // Смещение по Y
-
-            // Функция для получения координат центра символа
+            // Функция для получения реальных координат центра символа из DOM
             function getSymbolCenter(col, row) {
-                const x = col * (reelWidth + reelGap) + 45 + reelWidth/2; // X смещение 45 (чуть правее)
-                const y = row * symbolHeight - 3 + symbolHeight/2; // Y смещение -3 (еще выше)
+                const reelStrips = document.querySelectorAll('.reel-strip');
+                if (!reelStrips[col]) return { x: 0, y: 0 };
+                
+                const strip = reelStrips[col];
+                const offset = Math.abs(parseInt(strip.style.transform?.match(/-?\d+/)?.[0] || '0')) / 
+                              parseInt(getComputedStyle(strip.children[0]).height);
+                
+                const symbolIndex = Math.floor(offset) + row;
+                const symbol = strip.children[symbolIndex];
+                
+                if (!symbol) return { x: 0, y: 0 };
+                
+                // Получаем реальные координаты относительно контейнера .reels
+                const reelsContainer = document.querySelector('.reels');
+                const reelsRect = reelsContainer.getBoundingClientRect();
+                const symbolRect = symbol.getBoundingClientRect();
+                
+                // Координаты центра символа относительно SVG canvas (который начинается от .reels)
+                const x = symbolRect.left - reelsRect.left + symbolRect.width / 2;
+                const y = symbolRect.top - reelsRect.top + symbolRect.height / 2;
+                
                 return { x, y };
             }
 
