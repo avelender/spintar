@@ -1595,7 +1595,7 @@
                 const symbolRect = symbol.getBoundingClientRect();
                 
                 // Координаты центра символа относительно SVG canvas (который начинается от .reels)
-                const x = symbolRect.left - reelsRect.left + symbolRect.width / 2;
+                const x = symbolRect.left - reelsRect.left + symbolRect.width / 2 + 5; // смещение на 5px правее
                 const y = symbolRect.top - reelsRect.top + symbolRect.height / 2;
                 
                 return { x, y };
