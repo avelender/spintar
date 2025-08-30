@@ -1580,8 +1580,8 @@
 
             // Функция для получения координат центра символа
             function getSymbolCenter(col, row) {
-                const x = col * (reelWidth + reelGap) + 48 + reelWidth/2; // X смещение 48 (еще чуть правее)
-                const y = row * symbolHeight + 2 + symbolHeight/2; // Y смещение 2 (еще чуть выше)
+                const x = col * (reelWidth + reelGap) + 52 + reelWidth/2; // X смещение 52 (еще правее)
+                const y = row * symbolHeight - 1 + symbolHeight/2; // Y смещение -1 (еще выше)
                 return { x, y };
             }
 
