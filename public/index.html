@@ -1362,7 +1362,7 @@
                         console.log('🔄 Повторная попытка загрузки данных Firebase...');
                         try {
                             const retryDocSnap = await window.firebaseGetDoc(gameDocRef);
-                            if (retryDocSnap.exists()) {
+                            if (retryDocSnap.exists) {
                                 const data = retryDocSnap.data();
                                 console.log('✅ Firebase: Данные загружены после обновления токена!', data);
                                 
@@ -1479,7 +1479,7 @@
                 const gameDocRef = window.firebaseDoc(window.firebaseDB, 'scores', 'game_data');
                 
                 window.firebaseOnSnapshot(gameDocRef, (doc) => {
-                    if (doc.exists()) {
+                    if (doc.exists) {
                         const data = doc.data();
                         console.log(' [SYNC] Получены данные из Firebase:', Object.keys(data.playerScores || {}));
                         
