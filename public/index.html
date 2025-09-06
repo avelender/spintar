@@ -23,17 +23,9 @@
                 console.log('✅ Firebase конфиг загружен безопасно');
                 return data.firebaseConfig;
             } catch (error) {
-                console.error('❌ Ошибка загрузки Firebase конфига:', error);
-                // Fallback на хардкод если что-то пошло не так
-                console.warn('🔄 Используем резервный хардкод конфиг');
-                return {
-                    apiKey: "AIzaSyA4fhatF4D1V1w9_JZNI1fVHpjAHxt8h7g",
-                    authDomain: "randotar-35bf7.firebaseapp.com", 
-                    projectId: "randotar-35bf7",
-                    storageBucket: "randotar-35bf7.firebasestorage.app",
-                    messagingSenderId: "109301915648",
-                    appId: "1:109301915648:web:dfb093e59e0085939cf8e5"
-                };
+                console.error('❌ Критическая ошибка: не удалось загрузить Firebase конфигурацию!', error);
+                console.error('❌ Проверьте переменные окружения FIREBASE_API_KEY и FIREBASE_PROJECT_ID в Vercel');
+                throw new Error('Firebase configuration failed to load');
             }
         }
         
