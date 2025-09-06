@@ -12,30 +12,45 @@
         import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
         import { getAuth, signInWithCustomToken, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
         
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyA4fhatF4D1V1w9_JZNI1fVHpjAHxt8h7g", // ПУБЛИЧНЫЙ - не секрет
-            authDomain: "randotar-35bf7.firebaseapp.com",
-            projectId: "randotar-35bf7",
-            storageBucket: "randotar-35bf7.firebasestorage.app",
-            messagingSenderId: "109301915648",
-            appId: "1:109301915648:web:dfb093e59e0085939cf8e5"
-        };
+        // Firebase будет инициализирован после получения конфигурации с сервера
+        let app, db, auth;
         
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        
-        // Make Firebase available globally
-        window.firebaseDB = db;
-        window.firebaseDoc = doc;
-        window.firebaseGetDoc = getDoc;
-        window.firebaseSetDoc = setDoc;
-        window.firebaseOnSnapshot = onSnapshot;
-        window.firebaseAuth = auth;
-        window.firebaseSignInWithCustomToken = signInWithCustomToken;
-        window.firebaseOnAuthStateChanged = onAuthStateChanged;
+        // Функция инициализации Firebase
+        async function initializeFirebase() {
+            try {
+                console.log('🔧 [DEBUG] Получаем Firebase конфигурацию с сервера...');
+                const response = await fetch('/api/firebase-config');
+                
+                if (!response.ok) {
+                    throw new Error('Не удалось получить Firebase конфигурацию');
+                }
+                
+                const { firebaseConfig } = await response.json();
+                console.log('✅ [DEBUG] Firebase конфигурация получена:', firebaseConfig);
+                
+                // Initialize Firebase
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                // Make Firebase available globally
+                window.firebaseDB = db;
+                window.firebaseDoc = doc;
+                window.firebaseGetDoc = getDoc;
+                window.firebaseSetDoc = setDoc;
+                window.firebaseOnSnapshot = onSnapshot;
+                window.firebaseAuth = auth;
+                window.firebaseSignInWithCustomToken = signInWithCustomToken;
+                window.firebaseOnAuthStateChanged = onAuthStateChanged;
+                
+                console.log('✅ [DEBUG] Firebase инициализирован успешно!');
+                return true;
+            } catch (error) {
+                console.error('❌ Ошибка инициализации Firebase:', error);
+                showFirebaseError('Не удалось подключиться к Firebase. Проверьте соединение.');
+                return false;
+            }
+        }
     </script>
     <style>
         :root {
@@ -1769,12 +1784,14 @@
                 // Проверяем параметры URL и статус авторизации
                 checkURLParams();
                 
-                // Инициализируем Firebase
-                initializeFirebase();
-                
-                // Ждем немного для загрузки Firebase модулей
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
+                // 🔥 ИНИЦИАЛИЗИРУЕМ FIREBASE
+                console.log('🔍 Инициализируем Firebase...');
+                const firebaseInitialized = await initializeFirebase();
+                if (!firebaseInitialized) {
+                    console.error('❌ Игра не может работать без Firebase!');
+                    return; // Останавливаем инициализацию
+                }
+
                 // 🔥 ПРОВЕРЯЕМ ПОДКЛЮЧЕНИЕ К FIREBASE
                 console.log('🔍 Проверяем подключение к Firebase...');
                 const firebaseConnected = await testFirebaseConnection();
