@@ -71,7 +71,8 @@ spintar/
 │   │   ├── login.js
 │   │   ├── callback.js
 │   │   └── logout.js
-│   └── profile.js         # Получение профиля пользователя
+│   ├── profile.js         # Получение профиля пользователя
+│   └── relations.js       # API для друзей/врагов
 ├── package.json           # Зависимости проекта
 └── README.md             # Документация
 ```

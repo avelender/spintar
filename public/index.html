@@ -123,12 +123,12 @@
             border-radius: 10px;
             box-shadow: 0 2px 5px var(--shadow-color);
             color: var(--text-color);
-            
+            height: fit-content;
         }
 
         .history-container {
             flex: 0 0 200px;
-            min-height: 300px;
+            min-height: 333px;
         }
 
         .center-column {
@@ -143,7 +143,7 @@
 
         .slot-machine{width:100%;max-width:100%;background:transparent;padding:0;border-radius:0;box-shadow:none;text-align:center;margin-bottom:0;position:relative}.reels{display:flex;gap:10px;margin-bottom:20px;position:relative;justify-content:center;padding:10px}.reel{width:80px;height:180px;background:white;border-radius:5px;overflow:hidden;position:relative}.reel-strip{position:absolute;width:100%;left:0;top:0;display:flex;flex-direction:column;align-items:center}.emoji-symbol{width:80px;height:60px;display:flex;align-items:center;justify-content:center;font-size:40px;flex-shrink:0}
 
-        .price-list{width:100%;max-width:100%;background:var(--container-bg);padding:10px;border-radius:8px;box-shadow:0 2px 5px var(--shadow-color);height:fit-content}.price-categories{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;align-items:start}.price-category{flex:1;min-width:120px;text-align:center;padding:6px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-color)}.price-category h4{margin:0 0 5px 0;font-size:13px;color:var(--accent-color)}.price-category-title{font-size:14px;color:var(--title-color);margin-bottom:8px;font-weight:bold}.price-items{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}.price-item{display:inline-flex;align-items:center;gap:3px;font-size:13px;background:var(--bg-color);padding:4px 7px;border-radius:4px;border:1px solid var(--border-color)}.price-item span{margin-right:5px}.price-item .points{color:#28a745;font-size:14px}
+        .price-list{width:100%;max-width:100%;background:var(--container-bg);padding:10px;border-radius:8px;box-shadow:0 2px 5px var(--shadow-color);height:fit-content}.price-categories{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}.price-category{flex:1;min-width:120px;text-align:center;padding:6px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-color)}.price-category h4{margin:0 0 5px 0;font-size:13px;color:var(--accent-color)}.price-category-title{font-size:14px;color:var(--title-color);margin-bottom:8px;font-weight:bold}.price-items{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}.price-item{display:inline-flex;align-items:center;gap:3px;font-size:13px;background:var(--bg-color);padding:4px 7px;border-radius:4px;border:1px solid var(--border-color)}.price-item span{margin-right:5px}.price-item .points{color:#28a745;font-size:14px}
 
         .scores-table{flex:0 0 220px;min-height:300px}
 
@@ -167,7 +167,6 @@
             border-radius: 10px;
             box-shadow: 0 2px 5px var(--shadow-color);
             color: var(--text-color);
-            min-height: 300px;
         }
 
         .scores-table h2 {
@@ -251,7 +250,8 @@
             border-radius: 8px;
             box-shadow: 0 2px 5px var(--shadow-color);
             color: var(--text-color);
-            
+            height: fit-content;
+            max-height: var(--price-list-height, fit-content);
             display: flex;
             flex-direction: column;
             width: 100%;
@@ -690,8 +690,7 @@
             }
             
             .price-categories {
-                /* grid override for small screens: single column */
-                grid-template-columns: 1fr;
+                flex-direction: column;
                 gap: 8px;
             }
             
@@ -1012,31 +1011,9 @@
                     console.log('✅ Пользователь авторизован:', userData.username);
                     console.log('🔍 [DEBUG] checkAuthStatus завершен успешно');
                 } else if (response.status === 401) {
-                    console.log('🔍 [DEBUG] 401 - пользователь не авторизован, пробуем refresh');
-                    try {
-                        const refreshResp = await fetch('/api/auth/refresh', {
-                            method: 'POST',
-                            credentials: 'include'
-                        });
-                        if (refreshResp.ok) {
-                            const retry = await fetch('/api/profile', { credentials: 'include' });
-                            if (retry.ok) {
-                                const userData = await retry.json();
-                                currentUser = userData;
-                                isLoggedIn = true;
-                                console.log('✅ Пользователь авторизован после refresh:', userData.username);
-                            } else {
-                                currentUser = null;
-                                isLoggedIn = false;
-                            }
-                        } else {
-                            currentUser = null;
-                            isLoggedIn = false;
-                        }
-                    } catch (e) {
-                        currentUser = null;
-                        isLoggedIn = false;
-                    }
+                    console.log('🔍 [DEBUG] 401 - пользователь не авторизован');
+                    currentUser = null;
+                    isLoggedIn = false;
                 } else {
                     console.log('❌ [DEBUG] Неожиданный статус:', response.status);
                     currentUser = null;
@@ -1673,7 +1650,7 @@
                 checkURLParams();
                 
                 // Инициализируем Firebase
-                await initializeFirebase();
+                initializeFirebase();
                 
                 // Ждем немного для загрузки Firebase модулей
                 await new Promise(resolve => setTimeout(resolve, 100));
@@ -1771,8 +1748,8 @@
                 }
 
                 // Вызываем сразу и при изменении размера окна
-                // syncHistoryHeight();
-                // window.addEventListener('resize', syncHistoryHeight);
+                syncHistoryHeight();
+                window.addEventListener('resize', syncHistoryHeight);
             } catch (error) {
                 // Игнорируем ошибки инициализации
             }
@@ -1808,6 +1785,28 @@
         };
 
         let emojis = Object.keys(emojiPrices);
+        let score = 0;
+
+        // Создаем прайс-лист
+        function createPriceList() {
+            const priceItems = document.querySelector('.price-items');
+            const sortedEmojis = [...emojis].sort((a, b) => emojiPrices[b] - emojiPrices[a]);
+            
+            sortedEmojis.forEach(emoji => {
+                const item = document.createElement('div');
+                item.className = 'price-item';
+                item.innerHTML = `
+                    <span class="emoji">${emoji}</span>
+                    <span class="points">${emojiPrices[emoji]} points</span>
+                `;
+                priceItems.appendChild(item);
+            });
+        }
+
+        function updateScore(points) {
+            score += points;
+            document.querySelector('.score-value').textContent = score;
+        }
 
         function getRandomEmoji() {
             return emojis[Math.floor(Math.random() * emojis.length)];
@@ -1956,13 +1955,14 @@
                 
                 if (!symbol) return { x: 0, y: 0 };
                 
-                // Координаты центра символа относительно SVG canvas (#winLines)
-                const canvas = document.getElementById('winLines');
-                const canvasRect = canvas.getBoundingClientRect();
+                // Получаем реальные координаты относительно контейнера .reels
+                const reelsContainer = document.querySelector('.reels');
+                const reelsRect = reelsContainer.getBoundingClientRect();
                 const symbolRect = symbol.getBoundingClientRect();
                 
-                const x = symbolRect.left + symbolRect.width / 2 - canvasRect.left;
-                const y = symbolRect.top + symbolRect.height / 2 - canvasRect.top;
+                // Координаты центра символа относительно SVG canvas (который начинается от .reels)
+                const x = symbolRect.left - reelsRect.left + symbolRect.width / 2 + 18; // смещение на 18px правее
+                const y = symbolRect.top - reelsRect.top + symbolRect.height / 2 - 8; // смещение на 8px выше
                 
                 return { x, y };
             }
@@ -2120,19 +2120,19 @@
         // Функция переключения темы
         function toggleTheme() {
             const body = document.body;
-            const isDark = body.getAttribute('data-theme') === 'dark';
-            if (isDark) {
+            const themeSwitch = document.querySelector('.theme-switch');
+            const themeIcon = themeSwitch.querySelector('.theme-icon');
+            const themeText = themeSwitch.querySelector('.theme-text');
+            
+            if (body.getAttribute('data-theme') === 'dark') {
                 body.removeAttribute('data-theme');
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Light';
             } else {
                 body.setAttribute('data-theme', 'dark');
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Dark';
             }
-            const nowDark = body.getAttribute('data-theme') === 'dark';
-            document.querySelectorAll('.theme-switch').forEach(sw => {
-                const icon = sw.querySelector('.theme-icon');
-                const text = sw.querySelector('.theme-text');
-                if (icon) icon.textContent = nowDark ? '🌙' : '☀️';
-                if (text) text.textContent = nowDark ? 'Dark' : 'Light';
-            });
             
             // Сохраняем выбор темы
             localStorage.setItem('theme', body.getAttribute('data-theme') || 'light');
@@ -2143,14 +2143,9 @@
         if (savedTheme) {
             if (savedTheme === 'dark') {
                 document.body.setAttribute('data-theme', 'dark');
+                document.querySelector('.theme-icon').textContent = '🌙';
+                document.querySelector('.theme-text').textContent = 'Dark';
             }
-            const isDark = document.body.getAttribute('data-theme') === 'dark';
-            document.querySelectorAll('.theme-switch').forEach(sw => {
-                const icon = sw.querySelector('.theme-icon');
-                const text = sw.querySelector('.theme-text');
-                if (icon) icon.textContent = isDark ? '🌙' : '☀️';
-                if (text) text.textContent = isDark ? 'Dark' : 'Light';
-            });
         }
 
         // Обработчик кликов по кнопкам друзей/врагов

@@ -1,8 +1,5 @@
 // Debug endpoint для диагностики OAuth2 токенов и API
 export default async function handler(req, res) {
-    if (process.env.NODE_ENV === 'production') {
-        return res.status(404).end();
-    }
     try {
         console.log('🔧 [DEBUG] Starting debug endpoint');
         
