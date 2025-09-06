@@ -1071,16 +1071,23 @@
         // Функция для авторизации в Firebase
         async function authenticateWithFirebase() {
             try {
-                console.log('🔐 Получаем Firebase токен с сервера...');
+                console.log('🔐 [DEBUG] Получаем Firebase токен с сервера...');
                 
                 // Получаем Firebase токен с сервера
                 const response = await fetch('/api/auth/firebase-token', {
                     credentials: 'include'
                 });
                 
+                console.log('🔐 [DEBUG] Ответ сервера:', response.status, response.statusText);
+                
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ [DEBUG] Ошибка ответа сервера:', errorText);
                     throw new Error(`Ошибка получения Firebase токена: ${response.status}`);
                 }
+                
+                const responseData = await response.json();
+                console.log('🔐 [DEBUG] Ответ сервера JSON:', responseData);
                 
                 // Получаем токен из cookie
                 const cookies = document.cookie.split(';').reduce((acc, cookie) => {
@@ -1089,16 +1096,36 @@
                     return acc;
                 }, {});
                 
+                console.log('🔐 [DEBUG] Все cookies:', cookies);
+                
                 const firebaseToken = cookies.firebase_token;
                 
                 if (!firebaseToken) {
+                    console.error('❌ [DEBUG] Firebase токен не найден в cookies');
                     throw new Error('Не найден Firebase токен в cookie');
                 }
                 
+                console.log('🔐 [DEBUG] Firebase токен найден, длина:', firebaseToken.length);
+                
+                // Проверяем текущий статус авторизации в Firebase
+                const currentUser = window.firebaseAuth.currentUser;
+                console.log('🔐 [DEBUG] Текущий пользователь Firebase:', currentUser);
+                
                 // Авторизуемся в Firebase
+                console.log('🔐 [DEBUG] Пытаемся авторизоваться в Firebase...');
                 await window.firebaseAuth.signInWithCustomToken(firebaseToken);
-                console.log('✅ Успешная авторизация в Firebase');
-                return true;
+                
+                // Проверяем результат авторизации
+                const userAfterAuth = window.firebaseAuth.currentUser;
+                console.log('🔐 [DEBUG] Пользователь после авторизации:', userAfterAuth);
+                
+                if (userAfterAuth) {
+                    console.log('✅ Успешная авторизация в Firebase, uid:', userAfterAuth.uid);
+                    return true;
+                } else {
+                    console.error('❌ [DEBUG] После авторизации пользователь не определен');
+                    return false;
+                }
             } catch (error) {
                 console.error('❌ Ошибка авторизации в Firebase:', error);
                 return false;
