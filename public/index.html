@@ -12,45 +12,30 @@
         import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
         import { getAuth, signInWithCustomToken, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
         
-        // Firebase будет инициализирован после получения конфигурации с сервера
-        let app, db, auth;
+        // Firebase configuration (используем Vercel env или fallback)
+        const firebaseConfig = {
+            apiKey: "AIzaSyA4fhatF4D1V1w9_JZNI1fVHpjAHxt8h7g", 
+            authDomain: "randotar-35bf7.firebaseapp.com",
+            projectId: "randotar-35bf7",
+            storageBucket: "randotar-35bf7.firebasestorage.app",
+            messagingSenderId: "109301915648",
+            appId: "1:109301915648:web:dfb093e59e0085939cf8e5"
+        };
         
-        // Функция инициализации Firebase
-        async function initializeFirebase() {
-            try {
-                console.log('🔧 [DEBUG] Получаем Firebase конфигурацию с сервера...');
-                const response = await fetch('/api/firebase-config');
-                
-                if (!response.ok) {
-                    throw new Error('Не удалось получить Firebase конфигурацию');
-                }
-                
-                const { firebaseConfig } = await response.json();
-                console.log('✅ [DEBUG] Firebase конфигурация получена:', firebaseConfig);
-                
-                // Initialize Firebase
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                
-                // Make Firebase available globally
-                window.firebaseDB = db;
-                window.firebaseDoc = doc;
-                window.firebaseGetDoc = getDoc;
-                window.firebaseSetDoc = setDoc;
-                window.firebaseOnSnapshot = onSnapshot;
-                window.firebaseAuth = auth;
-                window.firebaseSignInWithCustomToken = signInWithCustomToken;
-                window.firebaseOnAuthStateChanged = onAuthStateChanged;
-                
-                console.log('✅ [DEBUG] Firebase инициализирован успешно!');
-                return true;
-            } catch (error) {
-                console.error('❌ Ошибка инициализации Firebase:', error);
-                showFirebaseError('Не удалось подключиться к Firebase. Проверьте соединение.');
-                return false;
-            }
-        }
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        // Make Firebase available globally
+        window.firebaseDB = db;
+        window.firebaseDoc = doc;
+        window.firebaseGetDoc = getDoc;
+        window.firebaseSetDoc = setDoc;
+        window.firebaseOnSnapshot = onSnapshot;
+        window.firebaseAuth = auth;
+        window.firebaseSignInWithCustomToken = signInWithCustomToken;
+        window.firebaseOnAuthStateChanged = onAuthStateChanged;
     </script>
     <style>
         :root {
@@ -956,23 +941,6 @@
         let bonusButton, bonusTimer;
         let playerRelations = {}; // Хранение связей друзей/врагов
         
-        // Initialize Firebase references when DOM is ready
-        async function initializeFirebase() {
-            // Ждем пока Firebase модули загрузятся
-            let attempts = 0;
-            while (!window.firebaseDB && attempts < 50) {
-                await new Promise(resolve => setTimeout(resolve, 100));
-                attempts++;
-            }
-            
-            if (window.firebaseDB) {
-                console.log('🔥 Firebase модули инициализированы успешно');
-                return true;
-            } else {
-                console.log('❌ Firebase модули не загрузились');
-                return false;
-            }
-        }
 
 
         // Функции для работы с OAuth2
@@ -1784,14 +1752,6 @@
                 // Проверяем параметры URL и статус авторизации
                 checkURLParams();
                 
-                // 🔥 ИНИЦИАЛИЗИРУЕМ FIREBASE
-                console.log('🔍 Инициализируем Firebase...');
-                const firebaseInitialized = await initializeFirebase();
-                if (!firebaseInitialized) {
-                    console.error('❌ Игра не может работать без Firebase!');
-                    return; // Останавливаем инициализацию
-                }
-
                 // 🔥 ПРОВЕРЯЕМ ПОДКЛЮЧЕНИЕ К FIREBASE
                 console.log('🔍 Проверяем подключение к Firebase...');
                 const firebaseConnected = await testFirebaseConnection();

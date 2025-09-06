@@ -87,52 +87,6 @@ export default async function handler(req, res) {
             return res.redirect('/?error=no_access_token');
         }
 
-        // Получаем информацию о пользователе
-        const userResponse = await fetch('https://api.orbitar.space/api/v1/user', {
-            headers: {
-                'Authorization': `Bearer ${access_token}`,
-                'User-Agent': 'SpinTar-Game/1.0'
-            }
-        });
-
-        if (!userResponse.ok) {
-            console.error('❌ Ошибка получения информации о пользователе');
-            return res.redirect('/?error=user_info_failed');
-        }
-
-        const userData = await userResponse.json();
-        console.log('🔍 [DEBUG] User data:', JSON.stringify(userData, null, 2));
-
-        // Создаем Firebase Custom Token
-        let firebaseToken = null;
-        try {
-            const admin = require('firebase-admin');
-            
-            // Инициализируем Firebase Admin SDK если еще не инициализирован
-            if (!admin.apps.length) {
-                const serviceAccount = {
-                    projectId: process.env.FIREBASE_PROJECT_ID,
-                    clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-                    privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n')
-                };
-                
-                admin.initializeApp({
-                    credential: admin.credential.cert(serviceAccount),
-                    projectId: process.env.FIREBASE_PROJECT_ID
-                });
-            }
-
-            // Создаем custom token для Firebase с user ID от Orbitar
-            firebaseToken = await admin.auth().createCustomToken(userData.username, {
-                username: userData.username,
-                orbitar_id: userData.id
-            });
-            
-            console.log('✅ Firebase custom token создан');
-        } catch (error) {
-            console.error('❌ Ошибка создания Firebase token:', error);
-            // Продолжаем без Firebase токена - игра все равно должна работать
-        }
 
         console.log('🔍 [DEBUG] Tokens received:');
         console.log('  - access_token length:', access_token.length);
@@ -150,11 +104,6 @@ export default async function handler(req, res) {
 
         if (refresh_token) {
             responseCookies.push(`refresh_token=${refresh_token}; HttpOnly; SameSite=Lax; Max-Age=2592000; Path=/`); // 30 дней
-        }
-
-        // Добавляем Firebase custom token если создан
-        if (firebaseToken) {
-            responseCookies.push(`firebase_token=${firebaseToken}; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(maxAge/1000)}; Path=/`);
         }
 
         console.log('🔍 [DEBUG] Setting cookies:', responseCookies);
