@@ -1626,14 +1626,6 @@
 
         // Обновляем счёт игрока
         async function updatePlayerScore(username, points) {
-            // 🔒 ЗАЩИТА ОТ ЧИТОВ: Проверяем что функция вызвана изнутри игры
-            const stack = new Error().stack;
-            if (!stack.includes('spin(') && !stack.includes('handleBonusClick') && 
-                !stack.includes('applyWinnings') && !stack.includes('checkWinningLines')) {
-                console.warn('🚫 БЛОКИРОВАНА попытка накрутки очков через консоль!');
-                return;
-            }
-            
             if (!username) return;
             
             if (!playerScores[username]) {
@@ -1841,6 +1833,49 @@
                     console.log('❌ [DEBUG] Кнопка .spin-button не найдена!');
                 }
                 
+                // Инициализируем кнопку бонуса
+                bonusButton = document.getElementById('bonusButton');
+                bonusTimer = document.getElementById('bonusTimer');
+                
+                if (bonusButton) {
+                    bonusButton.addEventListener('click', async () => {
+                        console.log('💰 [DEBUG] Bonus button clicked!');
+                        
+                        try {
+                            if (!isLoggedIn || !currentUser) {
+                                console.log('❌ [DEBUG] Пользователь не авторизован');
+                                alert('Please login to claim bonus!');
+                                return;
+                            }
+
+                            console.log('✅ [DEBUG] Пользователь авторизован, начисляем бонус...');
+                            
+                            // Начисляем бонус
+                            await updatePlayerScore(currentUser.username, 300);
+                            console.log('✅ [DEBUG] Бонус +300 очков начислен!');
+                            
+                            // Отключаем кнопку и запускаем таймер
+                            bonusButton.disabled = true;
+                            
+                            // Генерируем случайное время ожидания (30-180 секунд)
+                            const waitTime = Math.floor(Math.random() * (180 - 30 + 1)) + 30;
+                            const nextBonusTime = Date.now() + waitTime * 1000;
+                            
+                            // Сохраняем время следующего бонуса
+                            localStorage.setItem('nextBonusTime', nextBonusTime.toString());
+                            
+                            // Запускаем таймер
+                            startBonusTimer(nextBonusTime);
+                            addHistoryItem('bonus', `Bonus received: +300`);
+                        } catch (error) {
+                            activateBonus(); // В случае ошибки активируем кнопку
+                        }
+                    });
+                    console.log('✅ [DEBUG] Bonus button event listener добавлен');
+                } else {
+                    console.log('❌ [DEBUG] Кнопка bonusButton не найдена!');
+                }
+                
                 // Добавляем обработчик для кнопок друзей/врагов
                 const leaderboard = document.getElementById('leaderboard');
                 if (leaderboard) {
@@ -1922,10 +1957,11 @@
             sortedEmojis.forEach(emoji => {
                 const item = document.createElement('div');
                 item.className = 'price-item';
-                item.innerHTML = `
-                    <span class="emoji">${emoji}</span>
-                    <span class="points">${emojiPrices[emoji]} points</span>
-                `;
+                // 🔒 БЕЗОПАСНОЕ создание элементов без innerHTML
+                const emojiSpan = createSafeElement('span', 'emoji', emoji);
+                const pointsSpan = createSafeElement('span', 'points', `${emojiPrices[emoji]} points`);
+                item.appendChild(emojiSpan);
+                item.appendChild(pointsSpan);
                 priceItems.appendChild(item);
             });
         }
@@ -1980,13 +2016,6 @@
         }
 
         async function spin() {
-            // 🔒 ЗАЩИТА ОТ ЧИТОВ: Блокируем вызов из консоли
-            const stack = new Error().stack;
-            if (stack.includes('eval') || stack.includes('<anonymous>')) {
-                console.warn('🚫 БЛОКИРОВАНА попытка накрутки спинов через консоль!');
-                return;
-            }
-            
             console.log('🎰 [DEBUG] Spin clicked, isSpinning:', isSpinning);
             if (isSpinning) return;
 
