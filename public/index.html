@@ -1073,13 +1073,16 @@
             try {
                 console.log('🔐 [DEBUG] Получаем Firebase токен с сервера...');
                 
+                // Получаем текущего пользователя из глобальной переменной
+                const user = window.currentUser || {};
+                
                 // Проверяем, есть ли имя пользователя
-                if (!currentUser || !currentUser.username) {
-                    console.error('❌ [DEBUG] Нет имени пользователя для авторизации в Firebase');
+                if (!user || !user.username) {
+                    console.log('🔐 [DEBUG] Нет имени пользователя, используем гостевой идентификатор');
                 }
                 
                 // Добавляем имя пользователя в URL запроса
-                const username = currentUser?.username || 'guest_' + Math.random().toString(36).substring(2, 10);
+                const username = user?.username || 'guest_' + Math.random().toString(36).substring(2, 10);
                 const url = `/api/auth/firebase-token?username=${encodeURIComponent(username)}`;
                 console.log(`🔐 [DEBUG] Запрашиваем токен для пользователя: ${username}`);
                 
