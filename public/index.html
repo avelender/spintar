@@ -11,41 +11,65 @@
     <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-auth-compat.js"></script>
     
     <script>
-        // Firebase configuration (как было утром)
-        const firebaseConfig = {
-            apiKey: "AIzaSyA4fhatF4D1V1w9_JZNI1fVHpjAHxt8h7g",
-            authDomain: "randotar-35bf7.firebaseapp.com", 
-            projectId: "randotar-35bf7",
-            storageBucket: "randotar-35bf7.firebasestorage.app",
-            messagingSenderId: "109301915648",
-            appId: "1:109301915648:web:dfb093e59e0085939cf8e5"
-        };
+        // Функция для безопасной загрузки Firebase конфигурации с сервера
+        async function loadFirebaseConfig() {
+            try {
+                console.log('🔐 Загружаем Firebase конфиг из env переменных...');
+                const response = await fetch('/api/firebase-config');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                console.log('✅ Firebase конфиг загружен безопасно');
+                return data.firebaseConfig;
+            } catch (error) {
+                console.error('❌ Ошибка загрузки Firebase конфига:', error);
+                // Fallback на хардкод если что-то пошло не так
+                console.warn('🔄 Используем резервный хардкод конфиг');
+                return {
+                    apiKey: "AIzaSyA4fhatF4D1V1w9_JZNI1fVHpjAHxt8h7g",
+                    authDomain: "randotar-35bf7.firebaseapp.com", 
+                    projectId: "randotar-35bf7",
+                    storageBucket: "randotar-35bf7.firebasestorage.app",
+                    messagingSenderId: "109301915648",
+                    appId: "1:109301915648:web:dfb093e59e0085939cf8e5"
+                };
+            }
+        }
         
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const firebaseDB = firebase.firestore();
-        const firebaseAuth = firebase.auth();
-        
-        // Make Firebase available globally
-        window.firebaseDB = firebaseDB;
-        window.firebaseAuth = firebaseAuth;
-        
-        // Make Firebase compat functions available globally
-        window.firebaseDoc = function(db, collection, docId) {
-            return db.collection(collection).doc(docId);
-        };
-        window.firebaseGetDoc = function(db, collection, docId) {
-            return db.collection(collection).doc(docId);
-        };
-        window.firebaseSetDoc = function(docRef, data) {
-            return docRef.set(data);
-        };
-        window.firebaseOnSnapshot = function(docRef, callback) {
-            return docRef.onSnapshot(callback);
-        };
-        window.firebaseCollection = function(db, collectionPath) {
-            return db.collection(collectionPath);
-        };
+        // Async функция для инициализации Firebase с безопасным конфигом
+        async function initializeFirebaseSafely() {
+            const firebaseConfig = await loadFirebaseConfig();
+            
+            // Initialize Firebase
+            firebase.initializeApp(firebaseConfig);
+            const firebaseDB = firebase.firestore();
+            const firebaseAuth = firebase.auth();
+            
+            // Make Firebase available globally
+            window.firebaseDB = firebaseDB;
+            window.firebaseAuth = firebaseAuth;
+            
+            // Make Firebase compat functions available globally
+            window.firebaseDoc = function(db, collection, docId) {
+                return db.collection(collection).doc(docId);
+            };
+            window.firebaseGetDoc = function(db, collection, docId) {
+                return db.collection(collection).doc(docId);
+            };
+            window.firebaseSetDoc = function(docRef, data) {
+                return docRef.set(data);
+            };
+            window.firebaseOnSnapshot = function(docRef, callback) {
+                return docRef.onSnapshot(callback);
+            };
+            window.firebaseCollection = function(db, collectionPath) {
+                return db.collection(collectionPath);
+            };
+            
+            console.log('🔥 Firebase успешно инициализирован с безопасным конфигом');
+            return true;
+        }
     </script>
     <style>
         :root {
@@ -1758,6 +1782,14 @@
         async function initialize() {
             try {
                 console.log('🚀 Запуск игры...');
+                
+                // 🔐 ИНИЦИАЛИЗИРУЕМ FIREBASE БЕЗОПАСНО
+                console.log('🔐 Инициализируем Firebase с env переменными...');
+                const firebaseInitialized = await initializeFirebaseSafely();
+                if (!firebaseInitialized) {
+                    console.error('❌ Игра не может работать без Firebase!');
+                    return; // Останавливаем инициализацию
+                }
                 
                 // Проверяем параметры URL и статус авторизации
                 checkURLParams();
