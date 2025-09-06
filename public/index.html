@@ -1808,28 +1808,6 @@
         };
 
         let emojis = Object.keys(emojiPrices);
-        let score = 0;
-
-        // Создаем прайс-лист
-        function createPriceList() {
-            const priceItems = document.querySelector('.price-items');
-            const sortedEmojis = [...emojis].sort((a, b) => emojiPrices[b] - emojiPrices[a]);
-            
-            sortedEmojis.forEach(emoji => {
-                const item = document.createElement('div');
-                item.className = 'price-item';
-                item.innerHTML = `
-                    <span class="emoji">${emoji}</span>
-                    <span class="points">${emojiPrices[emoji]} points</span>
-                `;
-                priceItems.appendChild(item);
-            });
-        }
-
-        function updateScore(points) {
-            score += points;
-            document.querySelector('.score-value').textContent = score;
-        }
 
         function getRandomEmoji() {
             return emojis[Math.floor(Math.random() * emojis.length)];
