@@ -409,6 +409,39 @@
             padding: 20px;
         }
 
+        /* Стили для кнопок друзей/врагов */
+        .relation-buttons {
+            display: inline-flex;
+            margin-right: 4px;
+            gap: 2px;
+        }
+        
+        .relation-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            padding: 0;
+            margin: 0;
+            line-height: 1;
+            opacity: 0.6;
+            transition: opacity 0.2s ease, transform 0.1s ease;
+        }
+        
+        .relation-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        
+        .relation-btn.active {
+            opacity: 1;
+        }
+        
+        .relation-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.3;
+        }
+
         /* Стили для панели авторизации */
         .auth-panel {
             position: absolute;
@@ -1172,9 +1205,22 @@
                 leaderboard.innerHTML = sortedPlayers.map(([username, score], index) => {
                     const medals = ['🥇', '🥈', '🥉'];
                     const medal = index < 3 ? medals[index] : `${index + 1}.`;
+                    
+                    // Кнопки друзей/врагов показываем только авторизованным пользователям
+                    let relationButtons = '';
+                    if (isLoggedIn && currentUser) {
+                        relationButtons = `
+                            <span class="relation-buttons">
+                                <button class="relation-btn" data-type="friend" data-target="${username}" title="Add as friend">❤️</button>
+                                <button class="relation-btn" data-type="enemy" data-target="${username}" title="Add as enemy">💩</button>
+                            </span>
+                        `;
+                    }
+                    
                     return `
                         <div class="leaderboard-item">
                             <span class="rank">${medal}</span>
+                            ${relationButtons}
                             <span class="username">${username}</span>
                             <span class="score">${score}</span>
                         </div>
@@ -1369,6 +1415,13 @@
                     });
                 }
                 bonusTimer = document.getElementById('bonusTimer');
+                
+                // Добавляем обработчик для кнопок друзей/врагов
+                const leaderboard = document.getElementById('leaderboard');
+                if (leaderboard) {
+                    leaderboard.addEventListener('click', handleRelationButtonClick);
+                    console.log('✅ [DEBUG] Обработчик кнопок друзей/врагов подключен');
+                }
                 
                 // Проверяем сохраненное время бонуса
                 const savedTime = localStorage.getItem('nextBonusTime');
@@ -1780,6 +1833,47 @@
                 document.querySelector('.theme-icon').textContent = '🌙';
                 document.querySelector('.theme-text').textContent = 'Dark';
             }
+        }
+
+        // Обработчик кликов по кнопкам друзей/врагов
+        function handleRelationButtonClick(event) {
+            if (!event.target.classList.contains('relation-btn')) return;
+            
+            const button = event.target;
+            const type = button.dataset.type; // 'friend' или 'enemy'
+            const target = button.dataset.target; // никнейм
+            
+            // Нельзя добавлять себя в друзья/враги
+            if (currentUser && target === currentUser.username) {
+                console.log('❌ Нельзя добавлять себя в друзья/враги');
+                return;
+            }
+            
+            console.log(`🔄 Клик по кнопке: ${type} для ${target}`);
+            
+            // Toggle функция - переключаем состояние кнопки
+            if (button.classList.contains('active')) {
+                // Убираем из друзей/врагов
+                button.classList.remove('active');
+                button.title = type === 'friend' ? 'Add as friend' : 'Add as enemy';
+                console.log(`➖ Убрали ${target} из ${type === 'friend' ? 'друзей' : 'врагов'}`);
+            } else {
+                // Добавляем в друзья/враги
+                button.classList.add('active');
+                button.title = type === 'friend' ? 'Remove from friends' : 'Remove from enemies';
+                console.log(`➕ Добавили ${target} в ${type === 'friend' ? 'друзья' : 'враги'}`);
+                
+                // Если добавляем в друзья, убираем из врагов и наоборот
+                const otherType = type === 'friend' ? 'enemy' : 'friend';
+                const otherButton = document.querySelector(`.relation-btn[data-type="${otherType}"][data-target="${target}"]`);
+                if (otherButton && otherButton.classList.contains('active')) {
+                    otherButton.classList.remove('active');
+                    otherButton.title = otherType === 'friend' ? 'Add as friend' : 'Add as enemy';
+                    console.log(`🔄 Автоматически убрали ${target} из ${otherType === 'friend' ? 'друзей' : 'врагов'}`);
+                }
+            }
+            
+            // TODO: Здесь будет API запрос для сохранения изменений
         }
 
         // Запускаем инициализацию
