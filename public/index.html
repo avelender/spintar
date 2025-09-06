@@ -1075,7 +1075,7 @@
         // Функции для работы с отношениями друзей/врагов
         async function savePlayerRelation(target, type, action) {
             try {
-                console.log('🔄 Сохраняем отношение в Firestore:', { target, type, action });
+                console.log('🔄 Сохраняем отношение через общую функцию сохранения:', { target, type, action });
                 
                 if (!currentUser) {
                     throw new Error('User not logged in');
@@ -1083,61 +1083,76 @@
 
                 const username = currentUser.username;
 
-                // Сохраняем в playerRelations
-                const playerRelationRef = window.firebaseDoc(window.firebaseDB, 'playerRelations', username);
-                const playerRelationSnap = await window.firebaseGetDoc(playerRelationRef);
-                const currentRelations = playerRelationSnap.exists() ? playerRelationSnap.data() : {};
+                // Загружаем текущие данные из Firebase
+                await loadSavedScores();
 
-                if (action === 'add') {
-                    currentRelations[type] = target;
-                    // Убираем противоположное отношение
-                    const oppositeType = type === 'friend' ? 'enemy' : 'friend';
-                    delete currentRelations[oppositeType];
-                } else {
-                    delete currentRelations[type];
+                // Инициализируем структуры если их нет
+                if (!window.gameData) {
+                    window.gameData = {};
+                }
+                if (!window.gameData.playerRelations) {
+                    window.gameData.playerRelations = {};
+                }
+                if (!window.gameData.relationIndex) {
+                    window.gameData.relationIndex = {};
                 }
 
-                await window.firebaseSetDoc(playerRelationRef, currentRelations);
+                // Обновляем playerRelations
+                if (!window.gameData.playerRelations[username]) {
+                    window.gameData.playerRelations[username] = {};
+                }
+
+                if (action === 'add') {
+                    window.gameData.playerRelations[username][type] = target;
+                    // Убираем противоположное отношение
+                    const oppositeType = type === 'friend' ? 'enemy' : 'friend';
+                    delete window.gameData.playerRelations[username][oppositeType];
+                } else {
+                    delete window.gameData.playerRelations[username][type];
+                }
 
                 // Обновляем relationIndex
-                const relationIndexRef = window.firebaseDoc(window.firebaseDB, 'relationIndex', target);
-                const relationIndexSnap = await window.firebaseGetDoc(relationIndexRef);
-                const currentData = relationIndexSnap.exists() ? relationIndexSnap.data() : {};
+                if (!window.gameData.relationIndex[target]) {
+                    window.gameData.relationIndex[target] = {};
+                }
 
                 if (action === 'add') {
                     // Добавляем в новый тип
-                    if (!currentData[`${type}edBy`]) {
-                        currentData[`${type}edBy`] = [];
+                    if (!window.gameData.relationIndex[target][`${type}edBy`]) {
+                        window.gameData.relationIndex[target][`${type}edBy`] = [];
                     }
-                    if (!currentData[`${type}edBy`].includes(username)) {
-                        currentData[`${type}edBy`].push(username);
+                    if (!window.gameData.relationIndex[target][`${type}edBy`].includes(username)) {
+                        window.gameData.relationIndex[target][`${type}edBy`].push(username);
                     }
 
                     // Убираем из противоположного типа
                     const oppositeType = type === 'friend' ? 'enemy' : 'friend';
-                    if (currentData[`${oppositeType}edBy`]) {
-                        currentData[`${oppositeType}edBy`] = currentData[`${oppositeType}edBy`].filter(u => u !== username);
-                        if (currentData[`${oppositeType}edBy`].length === 0) {
-                            delete currentData[`${oppositeType}edBy`];
+                    if (window.gameData.relationIndex[target][`${oppositeType}edBy`]) {
+                        window.gameData.relationIndex[target][`${oppositeType}edBy`] = 
+                            window.gameData.relationIndex[target][`${oppositeType}edBy`].filter(u => u !== username);
+                        if (window.gameData.relationIndex[target][`${oppositeType}edBy`].length === 0) {
+                            delete window.gameData.relationIndex[target][`${oppositeType}edBy`];
                         }
                     }
                 } else {
                     // Убираем из текущего типа
-                    if (currentData[`${type}edBy`]) {
-                        currentData[`${type}edBy`] = currentData[`${type}edBy`].filter(u => u !== username);
-                        if (currentData[`${type}edBy`].length === 0) {
-                            delete currentData[`${type}edBy`];
+                    if (window.gameData.relationIndex[target][`${type}edBy`]) {
+                        window.gameData.relationIndex[target][`${type}edBy`] = 
+                            window.gameData.relationIndex[target][`${type}edBy`].filter(u => u !== username);
+                        if (window.gameData.relationIndex[target][`${type}edBy`].length === 0) {
+                            delete window.gameData.relationIndex[target][`${type}edBy`];
                         }
                     }
                 }
 
-                await window.firebaseSetDoc(relationIndexRef, currentData);
+                // Сохраняем через существующую систему
+                await saveScoresWithRelations();
 
-                console.log('✅ Отношение сохранено в Firestore:', { target, type, action });
+                console.log('✅ Отношение сохранено:', { target, type, action });
                 return { success: true, message: `${action === 'add' ? 'Added' : 'Removed'} ${target} as ${type}` };
 
             } catch (error) {
-                console.log('❌ Ошибка сохранения отношения в Firestore:', error);
+                console.log('❌ Ошибка сохранения отношения:', error);
                 throw error;
             }
         }
@@ -1149,13 +1164,18 @@
                     return;
                 }
 
+                // Загружаем из общего документа игры
+                await loadSavedScores();
+                
                 const username = currentUser.username;
-                const playerRelationRef = window.firebaseDoc(window.firebaseDB, 'playerRelations', username);
-                const playerRelationSnap = await window.firebaseGetDoc(playerRelationRef);
-                playerRelations = playerRelationSnap.exists() ? playerRelationSnap.data() : {};
-                console.log('✅ Отношения загружены из Firestore:', playerRelations);
+                if (window.gameData?.playerRelations?.[username]) {
+                    playerRelations = window.gameData.playerRelations[username];
+                } else {
+                    playerRelations = {};
+                }
+                console.log('✅ Отношения загружены:', playerRelations);
             } catch (error) {
-                console.log('❌ Ошибка загрузки отношений из Firestore:', error);
+                console.log('❌ Ошибка загрузки отношений:', error);
                 playerRelations = {};
             }
         }
@@ -1164,15 +1184,19 @@
             try {
                 if (!currentUser) return { friendedBy: [], enemiedBy: [] };
 
-                const username = currentUser.username;
-                const relationIndexRef = window.firebaseDoc(window.firebaseDB, 'relationIndex', username);
-                const relationIndexSnap = await window.firebaseGetDoc(relationIndexRef);
-                const relationIndex = relationIndexSnap.exists() ? relationIndexSnap.data() : {};
+                // Загружаем из общего документа игры
+                await loadSavedScores();
                 
-                return {
-                    friendedBy: relationIndex.friendedBy || [],
-                    enemiedBy: relationIndex.enemiedBy || []
-                };
+                const username = currentUser.username;
+                if (window.gameData?.relationIndex?.[username]) {
+                    const relationIndex = window.gameData.relationIndex[username];
+                    return {
+                        friendedBy: relationIndex.friendedBy || [],
+                        enemiedBy: relationIndex.enemiedBy || []
+                    };
+                }
+                
+                return { friendedBy: [], enemiedBy: [] };
             } catch (error) {
                 console.log('❌ Ошибка загрузки списка кто добавил:', error);
                 return { friendedBy: [], enemiedBy: [] };
@@ -1282,9 +1306,22 @@
                     
                     playerScores = data.playerScores || {};
                     
+                    // Сохраняем все данные в глобальную переменную
+                    window.gameData = {
+                        playerScores: data.playerScores || {},
+                        playerRelations: data.playerRelations || {},
+                        relationIndex: data.relationIndex || {}
+                    };
+                    
                     updateScoreDisplay('firebase');
                 } else {
                     console.log('📝 Firebase: Создаем новый документ игры');
+                    // Инициализируем пустую структуру
+                    window.gameData = {
+                        playerScores: {},
+                        playerRelations: {},
+                        relationIndex: {}
+                    };
                     // Создаем начальный документ
                     await saveScores();
                     updateScoreDisplay('firebase');
@@ -1296,12 +1333,38 @@
             }
         }
 
+        // Сохраняем данные в Firebase Firestore (включая отношения)
+        async function saveScoresWithRelations() {
+            try {
+                const gameDocRef = fireDoc(fireDB, 'scores', 'game_data');
+                const gameData = {
+                    playerScores: playerScores,
+                    playerRelations: window.gameData?.playerRelations || {},
+                    relationIndex: window.gameData?.relationIndex || {},
+                    lastUpdated: new Date().toISOString()
+                };
+                
+                await fireSetDoc(gameDocRef, gameData);
+                console.log('💾 Firebase: Данные с отношениями сохранены!');
+                
+                // Сохраняем локальную копию
+                saveLocalScores();
+            } catch (error) {
+                console.log('❌ Firebase: Ошибка сохранения:', error.message);
+                // При ошибке сохраняем только локально
+                saveLocalScores();
+                throw error;
+            }
+        }
+
         // Сохраняем данные в Firebase Firestore
         async function saveScores() {
             try {
                 const gameDocRef = fireDoc(fireDB, 'scores', 'game_data');
                 const gameData = {
                     playerScores: playerScores,
+                    playerRelations: window.gameData?.playerRelations || {},
+                    relationIndex: window.gameData?.relationIndex || {},
                     lastUpdated: new Date().toISOString()
                 };
                 
