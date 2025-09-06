@@ -1204,10 +1204,10 @@
         }
 
         // Функция обработки бонусов/штрафов для друзей/врагов
-        async function processFriendEnemyBonuses(winnerUsername, winnings) {
+        async function processFriendEnemyBonuses(winnerUsername, netWin) {
             if (!winnerUsername || !playerRelations) return { friendBonus: null, enemyPenalty: null };
             
-            const bonusAmount = Math.floor(winnings * 0.1); // 10% от выигрыша
+            const bonusAmount = Math.floor(netWin * 0.1); // 10% от чистого выигрыша (за вычетом ставки)
             if (bonusAmount <= 0) return { friendBonus: null, enemyPenalty: null };
             
             const result = { friendBonus: null, enemyPenalty: null };
@@ -2088,7 +2088,8 @@
                 
                 if (netWin > 0) {
                     // Только при реальном выигрыше начисляем/списываем бонусы друзьям/врагам
-                    const bonusResult = await processFriendEnemyBonuses(username, winnings);
+                    // Передаем чистый выигрыш, а не полный
+                    const bonusResult = await processFriendEnemyBonuses(username, netWin);
                     
                     let message = `Win: +${netWin}`;
                     if (bonusResult.friendBonus) {
