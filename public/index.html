@@ -145,7 +145,7 @@
 
         .price-list{width:100%;max-width:100%;background:var(--container-bg);padding:10px;border-radius:8px;box-shadow:0 2px 5px var(--shadow-color);height:fit-content}.price-categories{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}.price-category{flex:1;min-width:120px;text-align:center;padding:6px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-color)}.price-category h4{margin:0 0 5px 0;font-size:13px;color:var(--accent-color)}.price-category-title{font-size:14px;color:var(--title-color);margin-bottom:8px;font-weight:bold}.price-items{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}.price-item{display:inline-flex;align-items:center;gap:3px;font-size:13px;background:var(--bg-color);padding:4px 7px;border-radius:4px;border:1px solid var(--border-color)}.price-item span{margin-right:5px}.price-item .points{color:#28a745;font-size:14px}
 
-        .scores-table{flex:0 0 180px;min-height:300px}
+        .scores-table{flex:0 0 220px;min-height:300px}
 
         /* Стили для анимации */
         @keyframes spin {
@@ -297,6 +297,10 @@
             border-left: 3px solid var(--bonus-color);
         }
 
+        .history-item.penalty {
+            border-left: 3px solid #dc3545;
+        }
+
         .history-time {
             color: #95a5a6;
             font-size: 12px;
@@ -435,11 +439,53 @@
         
         .relation-btn.active {
             opacity: 1;
+            background-color: rgba(0, 123, 255, 0.1);
+            transform: scale(1.1);
         }
-        
+
         .relation-btn:disabled {
             cursor: not-allowed;
             opacity: 0.3;
+        }
+
+        /* Стили для эмоджи у никнеймов */
+        .user-emoji {
+            font-size: 11px;
+            margin-left: 3px;
+            cursor: pointer;
+            opacity: 0.7;
+            position: relative;
+        }
+
+        .user-emoji:hover {
+            opacity: 1;
+        }
+
+        /* Tooltip для эмоджи */
+        .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: 4px;
+            pointer-events: none;
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 4px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.8);
         }
 
         /* Стили для панели авторизации */
@@ -618,7 +664,7 @@
             }
             
             .history-container, .scores-table {
-                min-height: 150px;
+                min-height: 300px;
             }
             
             .price-categories {
@@ -678,6 +724,18 @@
                 width: 70px;
                 height: 50px;
                 font-size: 32px;
+            }
+            
+            /* Адаптивность для кнопок друзей/врагов на мобильных */
+            .relation-btn {
+                font-size: 11px !important;
+                width: 18px !important;
+                height: 18px !important;
+                padding: 0 !important;
+            }
+            
+            .relation-buttons {
+                gap: 2px !important;
             }
         }
 
@@ -876,6 +934,7 @@
         let playerScores = {};
         let isSpinning = false;
         let bonusButton, bonusTimer;
+        let playerRelations = {}; // Хранение связей друзей/врагов
         
         // Initialize Firebase references when DOM is ready
         async function initializeFirebase() {
@@ -1013,6 +1072,108 @@
             }
         }
 
+        // Функции для работы с отношениями друзей/врагов
+        async function savePlayerRelation(target, type, action) {
+            try {
+                const response = await fetch('/api/relations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        target: target,
+                        type: type,
+                        action: action
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to save relation');
+                }
+
+                console.log('✅ Отношение сохранено:', data.message);
+                return data;
+            } catch (error) {
+                console.log('❌ Ошибка сохранения отношения:', error);
+                throw error;
+            }
+        }
+
+        async function loadPlayerRelations() {
+            try {
+                if (!currentUser) {
+                    playerRelations = {};
+                    return;
+                }
+
+                const response = await fetch('/api/relations?mode=my_relations', {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load relations');
+                }
+
+                const data = await response.json();
+                playerRelations = data.relations || {};
+                console.log('✅ Отношения загружены из Firebase:', playerRelations);
+            } catch (error) {
+                console.log('❌ Ошибка загрузки отношений из Firebase:', error);
+                // Без fallback к localStorage - всегда используем Firebase
+                playerRelations = {};
+            }
+        }
+
+        async function loadWhoAddedMe() {
+            try {
+                if (!currentUser) return { friendedBy: [], enemiedBy: [] };
+
+                const response = await fetch('/api/relations?mode=who_added_me', {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load relation index');
+                }
+
+                const data = await response.json();
+                return data.relationIndex || { friendedBy: [], enemiedBy: [] };
+            } catch (error) {
+                console.log('❌ Ошибка загрузки списка кто добавил:', error);
+                return { friendedBy: [], enemiedBy: [] };
+            }
+        }
+
+        // Функция обработки бонусов/штрафов для друзей/врагов
+        async function processFriendEnemyBonuses(winnerUsername, winnings) {
+            if (!winnerUsername || !playerRelations) return;
+            
+            const bonusAmount = Math.floor(winnings * 0.1); // 10% от выигрыша
+            if (bonusAmount <= 0) return;
+            
+            try {
+                // Начисляем бонус другу
+                if (playerRelations.friend) {
+                    const friendName = playerRelations.friend;
+                    console.log(`💝 Начисляем +${bonusAmount} другу ${friendName}`);
+                    await updatePlayerScore(friendName, bonusAmount);
+                    addHistoryItem('bonus', `Friend bonus: +${bonusAmount} to ${friendName}`);
+                }
+                
+                // Списываем штраф с врага  
+                if (playerRelations.enemy) {
+                    const enemyName = playerRelations.enemy;
+                    console.log(`💩 Списываем -${bonusAmount} с врага ${enemyName}`);
+                    await updatePlayerScore(enemyName, -bonusAmount);
+                    addHistoryItem('penalty', `Enemy penalty: -${bonusAmount} from ${enemyName}`);
+                }
+            } catch (error) {
+                console.log('❌ Ошибка обработки бонусов друзей/врагов:', error);
+            }
+        }
+
         // Проверяем параметры URL при загрузке
         function checkURLParams() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -1021,9 +1182,6 @@
 
             if (authStatus === 'success') {
                 console.log('🎉 Авторизация успешна!');
-                // Проверяем статус авторизации
-                checkAuthStatus();
-                // Очищаем URL от параметров
                 window.history.replaceState({}, document.title, window.location.pathname);
             } else if (error) {
                 console.error('❌ Ошибка авторизации:', error);
@@ -1209,19 +1367,41 @@
                     // Кнопки друзей/врагов показываем только авторизованным пользователям
                     let relationButtons = '';
                     if (isLoggedIn && currentUser) {
+                        // Определяем состояние кнопок на основе сохраненных отношений
+                        const isFriend = playerRelations.friend === username;
+                        const isEnemy = playerRelations.enemy === username;
+                        
+                        const friendClass = isFriend ? 'relation-btn active' : 'relation-btn';
+                        const enemyClass = isEnemy ? 'relation-btn active' : 'relation-btn';
+                        const friendTitle = isFriend ? 'Remove from friends' : 'Add as friend';
+                        const enemyTitle = isEnemy ? 'Remove from enemies' : 'Add as enemy';
+                        
                         relationButtons = `
                             <span class="relation-buttons">
-                                <button class="relation-btn" data-type="friend" data-target="${username}" title="Add as friend">❤️</button>
-                                <button class="relation-btn" data-type="enemy" data-target="${username}" title="Add as enemy">💩</button>
+                                <button class="${friendClass}" data-type="friend" data-target="${username}" title="${friendTitle}">❤️</button>
+                                <button class="${enemyClass}" data-type="enemy" data-target="${username}" title="${enemyTitle}">💩</button>
                             </span>
                         `;
+                    }
+                    
+                    // Показываем эмоджи у своего ника если кто-то добавил в друзья/враги
+                    let userEmojis = '';
+                    if (currentUser && username === currentUser.username && window.currentUserRelationIndex) {
+                        const { friendedBy = [], enemiedBy = [] } = window.currentUserRelationIndex;
+                        
+                        if (friendedBy.length > 0) {
+                            userEmojis += `<span class="user-emoji friend-emoji" title="You are someone's friend" data-tooltip="friend" data-friends="${friendedBy.join(', ')}">❤️</span>`;
+                        }
+                        if (enemiedBy.length > 0) {
+                            userEmojis += `<span class="user-emoji enemy-emoji" title="You are someone's enemy" data-tooltip="enemy" data-enemies="${enemiedBy.join(', ')}">💩</span>`;
+                        }
                     }
                     
                     return `
                         <div class="leaderboard-item">
                             <span class="rank">${medal}</span>
                             ${relationButtons}
-                            <span class="username">${username}</span>
+                            <span class="username">${username}${userEmojis}</span>
                             <span class="score">${score}</span>
                         </div>
                     `;
@@ -1373,6 +1553,17 @@
                 await checkAuthStatus();
                 console.log('✅ [DEBUG] Статус авторизации проверен');
                 
+                // Загружаем отношения друзей/врагов если пользователь авторизован
+                if (isLoggedIn && currentUser) {
+                    console.log('👥 [DEBUG] Загружаем отношения друзей/врагов...');
+                    await loadPlayerRelations();
+                    console.log('✅ [DEBUG] Отношения загружены');
+                    
+                    console.log('👥 [DEBUG] Загружаем список кто добавил в друзья/враги...');
+                    window.currentUserRelationIndex = await loadWhoAddedMe();
+                    console.log('✅ [DEBUG] Список загружен:', window.currentUserRelationIndex);
+                }
+                
                 // Инициализируем барабаны
                 console.log('🎰 [DEBUG] Вызываем initializeReels...');
                 await initializeReels();
@@ -1420,7 +1611,9 @@
                 const leaderboard = document.getElementById('leaderboard');
                 if (leaderboard) {
                     leaderboard.addEventListener('click', handleRelationButtonClick);
-                    console.log('✅ [DEBUG] Обработчик кнопок друзей/врагов подключен');
+                    leaderboard.addEventListener('mouseenter', handleEmojiHover, true);
+                    leaderboard.addEventListener('mouseleave', handleEmojiHover, true);
+                    console.log('✅ [DEBUG] Обработчики кнопок друзей/врагов и tooltip подключены');
                 }
                 
                 // Проверяем сохраненное время бонуса
@@ -1790,6 +1983,9 @@
                 const username = getCurrentUsername();
                 await updatePlayerScore(username, winnings);
                 
+                // Начисляем/списываем бонусы друзьям/врагам
+                await processFriendEnemyBonuses(username, winnings);
+                
                 // Показываем чистый выигрыш (за вычетом стоимости спина)
                 const netWin = winnings - 100;
                 if (netWin > 0) {
@@ -1836,7 +2032,7 @@
         }
 
         // Обработчик кликов по кнопкам друзей/врагов
-        function handleRelationButtonClick(event) {
+        async function handleRelationButtonClick(event) {
             if (!event.target.classList.contains('relation-btn')) return;
             
             const button = event.target;
@@ -1849,31 +2045,84 @@
                 return;
             }
             
-            console.log(`🔄 Клик по кнопке: ${type} для ${target}`);
+            // Блокируем кнопку во время обработки
+            button.disabled = true;
             
-            // Toggle функция - переключаем состояние кнопки
-            if (button.classList.contains('active')) {
-                // Убираем из друзей/врагов
-                button.classList.remove('active');
-                button.title = type === 'friend' ? 'Add as friend' : 'Add as enemy';
-                console.log(`➖ Убрали ${target} из ${type === 'friend' ? 'друзей' : 'врагов'}`);
-            } else {
-                // Добавляем в друзья/враги
-                button.classList.add('active');
-                button.title = type === 'friend' ? 'Remove from friends' : 'Remove from enemies';
-                console.log(`➕ Добавили ${target} в ${type === 'friend' ? 'друзья' : 'враги'}`);
+            try {
+                console.log(`🔄 Клик по кнопке: ${type} для ${target}`);
                 
-                // Если добавляем в друзья, убираем из врагов и наоборот
-                const otherType = type === 'friend' ? 'enemy' : 'friend';
-                const otherButton = document.querySelector(`.relation-btn[data-type="${otherType}"][data-target="${target}"]`);
-                if (otherButton && otherButton.classList.contains('active')) {
-                    otherButton.classList.remove('active');
-                    otherButton.title = otherType === 'friend' ? 'Add as friend' : 'Add as enemy';
-                    console.log(`🔄 Автоматически убрали ${target} из ${otherType === 'friend' ? 'друзей' : 'врагов'}`);
+                // Определяем действие на основе текущего состояния
+                const isActive = button.classList.contains('active');
+                const action = isActive ? 'remove' : 'add';
+                
+                // Отправляем запрос на сервер
+                await savePlayerRelation(target, type, action);
+                
+                // Обновляем локальное состояние только после успешного API вызова
+                if (action === 'add') {
+                    playerRelations[type] = target;
+                    // Убираем противоположное отношение
+                    const oppositeType = type === 'friend' ? 'enemy' : 'friend';
+                    playerRelations[oppositeType] = null;
+                    console.log(`➕ Добавили ${target} в ${type === 'friend' ? 'друзья' : 'враги'} (сохранено в Firebase)`);
+                } else {
+                    playerRelations[type] = null;
+                    console.log(`➖ Убрали ${target} из ${type === 'friend' ? 'друзей' : 'врагов'} (удалено из Firebase)`);
                 }
+                
+                // Перезагружаем данные tooltip после изменения отношений
+                if (currentUser) {
+                    window.currentUserRelationIndex = await loadWhoAddedMe();
+                }
+                
+                // Обновляем отображение таблицы лидеров
+                updateScoreDisplay();
+                
+            } catch (error) {
+                console.log('❌ Ошибка при изменении отношения:', error);
+                // При ошибке показываем уведомление пользователю
+                addHistoryItem('loss', `Error: Failed to update ${type} status`);
+            } finally {
+                // Разблокируем кнопку
+                button.disabled = false;
             }
+        }
+
+        // Функции для работы с tooltip
+        function showTooltip(element, content) {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            tooltip.textContent = content;
+            element.appendChild(tooltip);
+        }
+
+        function hideTooltip(element) {
+            const tooltip = element.querySelector('.tooltip');
+            if (tooltip) {
+                tooltip.remove();
+            }
+        }
+
+        // Обработчик наведения на эмоджи у своего ника
+        function handleEmojiHover(event) {
+            if (!event.target.classList.contains('user-emoji')) return;
             
-            // TODO: Здесь будет API запрос для сохранения изменений
+            const emoji = event.target;
+            const type = emoji.dataset.tooltip;
+            
+            if (event.type === 'mouseenter') {
+                let tooltipText = '';
+                if (type === 'friend') {
+                    const friends = emoji.dataset.friends || '';
+                    tooltipText = friends ? `Friends: ${friends}` : 'No friends yet';
+                } else if (type === 'enemy') {
+                    const enemies = emoji.dataset.enemies || '';
+                    tooltipText = enemies ? `Enemies: ${enemies}` : 'No enemies yet';
+                }
+                showTooltip(emoji, tooltipText);
+            } else if (event.type === 'mouseleave') {
+                hideTooltip(emoji);
+            }
         }
 
         // Запускаем инициализацию
