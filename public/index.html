@@ -29,6 +29,23 @@
         // Make Firebase available globally
         window.firebaseDB = firebaseDB;
         window.firebaseAuth = firebaseAuth;
+        
+        // Make Firebase compat functions available globally
+        window.firebaseDoc = function(db, collection, docId) {
+            return db.collection(collection).doc(docId);
+        };
+        window.firebaseGetDoc = function(db, collection, docId) {
+            return db.collection(collection).doc(docId);
+        };
+        window.firebaseSetDoc = function(docRef, data) {
+            return docRef.set(data);
+        };
+        window.firebaseOnSnapshot = function(docRef, callback) {
+            return docRef.onSnapshot(callback);
+        };
+        window.firebaseCollection = function(db, collectionPath) {
+            return db.collection(collectionPath);
+        };
     </script>
     <style>
         :root {
