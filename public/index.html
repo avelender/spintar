@@ -931,8 +931,7 @@
 
 
     <script>
-        // Firebase references (initialized by module script)  
-        let fireDB, fireDoc, fireGetDoc, fireSetDoc, fireOnSnapshot;
+        // Firebase references (используем глобальные переменные напрямую)
         
         // Игровые переменные
         let currentUser = null;
@@ -952,11 +951,6 @@
             }
             
             if (window.firebaseDB) {
-                fireDB = window.firebaseDB;
-                fireDoc = window.firebaseDoc;
-                fireGetDoc = window.firebaseGetDoc;
-                fireSetDoc = window.firebaseSetDoc;
-                fireOnSnapshot = window.firebaseOnSnapshot;
                 console.log('🔥 Firebase модули инициализированы успешно');
                 return true;
             } else {
@@ -1334,8 +1328,8 @@
         async function loadSavedScores() {
             try {
                 console.log('🔥 Firebase: Загружаем данные игры...');
-                const gameDocRef = fireDoc(fireDB, 'scores', 'game_data');
-                const docSnap = await fireGetDoc(gameDocRef);
+                const gameDocRef = window.firebaseDoc(window.firebaseDB, 'scores', 'game_data');
+                const docSnap = await window.firebaseGetDoc(gameDocRef);
                 
                 if (docSnap.exists()) {
                     const data = docSnap.data();
@@ -1374,7 +1368,7 @@
                     if (isLoggedIn) {
                         console.log('🔄 Повторная попытка загрузки данных Firebase...');
                         try {
-                            const retryDocSnap = await fireGetDoc(gameDocRef);
+                            const retryDocSnap = await window.firebaseGetDoc(gameDocRef);
                             if (retryDocSnap.exists()) {
                                 const data = retryDocSnap.data();
                                 console.log('✅ Firebase: Данные загружены после обновления токена!', data);
@@ -1402,7 +1396,7 @@
         // Сохраняем данные в Firebase Firestore (включая отношения)
         async function saveScoresWithRelations() {
             try {
-                const gameDocRef = fireDoc(fireDB, 'scores', 'game_data');
+                const gameDocRef = window.firebaseDoc(window.firebaseDB, 'scores', 'game_data');
                 const gameData = {
                     playerScores: playerScores,
                     playerRelations: window.gameData?.playerRelations || {},
@@ -1410,7 +1404,7 @@
                     lastUpdated: new Date().toISOString()
                 };
                 
-                await fireSetDoc(gameDocRef, gameData);
+                await window.firebaseSetDoc(gameDocRef, gameData);
                 console.log('💾 Firebase: Данные с отношениями сохранены!');
             } catch (error) {
                 console.error('❌ КРИТИЧЕСКАЯ ОШИБКА Firebase:', error.message);
@@ -1422,7 +1416,7 @@
         // Сохраняем данные в Firebase Firestore
         async function saveScores() {
             try {
-                const gameDocRef = fireDoc(fireDB, 'scores', 'game_data');
+                const gameDocRef = window.firebaseDoc(window.firebaseDB, 'scores', 'game_data');
                 const gameData = {
                     playerScores: playerScores,
                     playerRelations: window.gameData?.playerRelations || {},
@@ -1431,7 +1425,7 @@
                 };
                 
                 console.log('💾 [SAVE] Сохраняем в Firebase:', Object.keys(playerScores));
-                await fireSetDoc(gameDocRef, gameData);
+                await window.firebaseSetDoc(gameDocRef, gameData);
                 console.log('✅ [SAVE] ✓ КРОСС-УСТРОЙСТВО СИНХРОНИЗАЦИЯ: Данные сохранены в Firebase!');
                 return true; // Успешное сохранение
             } catch (error) {
@@ -1489,9 +1483,9 @@
         // Подписываемся на изменения в реальном времени
         function subscribeToScores() {
             try {
-                const gameDocRef = fireDoc(fireDB, 'scores', 'game_data');
+                const gameDocRef = window.firebaseDoc(window.firebaseDB, 'scores', 'game_data');
                 
-                fireOnSnapshot(gameDocRef, (doc) => {
+                window.firebaseOnSnapshot(gameDocRef, (doc) => {
                     if (doc.exists()) {
                         const data = doc.data();
                         console.log(' [SYNC] Получены данные из Firebase:', Object.keys(data.playerScores || {}));
@@ -1764,8 +1758,8 @@
         // Проверяем подключение к Firebase при запуске
         async function testFirebaseConnection() {
             try {
-                const gameDocRef = fireDoc(fireDB, 'scores', 'game_data');
-                await fireGetDoc(gameDocRef);
+                const gameDocRef = window.firebaseDoc(window.firebaseDB, 'scores', 'game_data');
+                await window.firebaseGetDoc(gameDocRef);
                 console.log('✅ Firebase подключение успешно!');
                 return true;
             } catch (error) {
