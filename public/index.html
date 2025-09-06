@@ -1111,9 +1111,8 @@
 
                 if (action === 'add') {
                     window.gameData.playerRelations[username][type] = target;
-                    // Убираем противоположное отношение
-                    const oppositeType = type === 'friend' ? 'enemy' : 'friend';
-                    delete window.gameData.playerRelations[username][oppositeType];
+                    // Разрешаем иметь одновременно и друга, и врага
+                    // Убрано автоматическое удаление противоположного отношения
                 } else {
                     delete window.gameData.playerRelations[username][type];
                 }
@@ -1132,15 +1131,8 @@
                         window.gameData.relationIndex[target][`${type}edBy`].push(username);
                     }
 
-                    // Убираем из противоположного типа
-                    const oppositeType = type === 'friend' ? 'enemy' : 'friend';
-                    if (window.gameData.relationIndex[target][`${oppositeType}edBy`]) {
-                        window.gameData.relationIndex[target][`${oppositeType}edBy`] = 
-                            window.gameData.relationIndex[target][`${oppositeType}edBy`].filter(u => u !== username);
-                        if (window.gameData.relationIndex[target][`${oppositeType}edBy`].length === 0) {
-                            delete window.gameData.relationIndex[target][`${oppositeType}edBy`];
-                        }
-                    }
+                    // Разрешаем одновременно быть в друзьях и врагах
+                    // Убрано автоматическое удаление из противоположного типа
                 } else {
                     // Убираем из текущего типа
                     if (window.gameData.relationIndex[target][`${type}edBy`]) {
@@ -2178,9 +2170,8 @@
                 // Обновляем локальное состояние только после успешного API вызова
                 if (action === 'add') {
                     playerRelations[type] = target;
-                    // Убираем противоположное отношение
-                    const oppositeType = type === 'friend' ? 'enemy' : 'friend';
-                    playerRelations[oppositeType] = null;
+                    // Разрешаем иметь одновременно и друга, и врага
+                    // Убрано автоматическое обнуление противоположного отношения
                     console.log(`➕ Добавили ${target} в ${type === 'friend' ? 'друзья' : 'враги'} (сохранено в Firebase)`);
                 } else {
                     playerRelations[type] = null;
