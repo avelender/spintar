@@ -1480,8 +1480,21 @@
                         
                         const friendClass = isFriend ? 'relation-btn active' : 'relation-btn';
                         const enemyClass = isEnemy ? 'relation-btn active' : 'relation-btn';
-                        const friendTitle = isFriend ? 'Remove from friends' : 'Add as friend';
-                        const enemyTitle = isEnemy ? 'Remove from enemies' : 'Add as enemy';
+                        
+                        let friendTitle = isFriend ? 'Remove from friends' : 'Add as friend';
+                        let enemyTitle = isEnemy ? 'Remove from enemies' : 'Add as enemy';
+                        
+                        // Для своего никнейма показываем информацию о том, кто добавил в друзья/враги
+                        if (username === currentUser.username && window.currentUserRelationIndex) {
+                            const { friendedBy = [], enemiedBy = [] } = window.currentUserRelationIndex;
+                            
+                            if (friendedBy.length > 0) {
+                                friendTitle = `You are friends with: ${friendedBy.join(', ')}`;
+                            }
+                            if (enemiedBy.length > 0) {
+                                enemyTitle = `You are enemies with: ${enemiedBy.join(', ')}`;
+                            }
+                        }
                         
                         relationButtons = `
                             <span class="relation-buttons">
@@ -1491,24 +1504,11 @@
                         `;
                     }
                     
-                    // Показываем эмоджи у своего ника если кто-то добавил в друзья/враги
-                    let userEmojis = '';
-                    if (currentUser && username === currentUser.username && window.currentUserRelationIndex) {
-                        const { friendedBy = [], enemiedBy = [] } = window.currentUserRelationIndex;
-                        
-                        if (friendedBy.length > 0) {
-                            userEmojis += `<span class="user-emoji friend-emoji" title="You are someone's friend" data-tooltip="friend" data-friends="${friendedBy.join(', ')}">❤️</span>`;
-                        }
-                        if (enemiedBy.length > 0) {
-                            userEmojis += `<span class="user-emoji enemy-emoji" title="You are someone's enemy" data-tooltip="enemy" data-enemies="${enemiedBy.join(', ')}">💩</span>`;
-                        }
-                    }
-                    
                     return `
                         <div class="leaderboard-item">
                             <span class="rank">${medal}</span>
                             ${relationButtons}
-                            <span class="username">${username}${userEmojis}</span>
+                            <span class="username">${username}</span>
                             <span class="score">${score}</span>
                         </div>
                     `;
