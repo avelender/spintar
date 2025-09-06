@@ -22,10 +22,22 @@ export default function handler(req, res) {
         const state = Math.random().toString(36).substring(2, 15) + 
                      Math.random().toString(36).substring(2, 15);
         
+        // Проверяем окружение для добавления флага Secure
+        const isProduction = process.env.NODE_ENV === 'production';
+        console.log(`🔒 Cookies security: ${isProduction ? 'PRODUCTION with Secure flag' : 'DEVELOPMENT without Secure flag'}`);
+        
         // Сохраняем state в cookie для проверки при callback
-        res.setHeader('Set-Cookie', [
-            `oauth_state=${state}; HttpOnly; SameSite=Lax; Max-Age=600; Path=/`
-        ]);
+        const cookieOptions = {
+            httpOnly: true,
+            sameSite: 'Lax',
+            path: '/',
+            maxAge: 600,
+            secure: isProduction // Secure флаг только в production
+        };
+        
+        const cookieString = `oauth_state=${state}; HttpOnly; SameSite=${cookieOptions.sameSite}; Path=${cookieOptions.path}; Max-Age=${cookieOptions.maxAge}${isProduction ? '; Secure' : ''}`;
+        
+        res.setHeader('Set-Cookie', [cookieString]);
 
         // Формируем URL для авторизации на орбитаре (строго по документации)
         const authUrl = `https://orbitar.space/oauth2/authorize?` +

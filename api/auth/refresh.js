@@ -46,10 +46,14 @@ export default async function handler(req, res) {
             const errorText = await tokenResponse.text();
             console.error('❌ Ошибка обновления токена:', tokenResponse.status, errorText);
             
+            // Проверяем окружение для добавления флага Secure
+            const isProduction = process.env.NODE_ENV === 'production';
+            console.log(`🔒 Cookies security: ${isProduction ? 'PRODUCTION with Secure flag' : 'DEVELOPMENT without Secure flag'}`);
+            
             // Если refresh token недействителен, очищаем cookies
             res.setHeader('Set-Cookie', [
-                `access_token=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/`,
-                `refresh_token=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/`
+                `access_token=; HttpOnly; SameSite=Lax; Max-Age=0; Path=/${isProduction ? '; Secure' : ''}`,
+                `refresh_token=; HttpOnly; SameSite=Lax; Max-Age=0; Path=/${isProduction ? '; Secure' : ''}`
             ]);
             
             return res.status(401).json({ error: 'Refresh token invalid' });
@@ -63,16 +67,20 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'Failed to get new access token' });
         }
 
+        // Проверяем окружение для добавления флага Secure
+        const isProduction = process.env.NODE_ENV === 'production';
+        console.log(`🔒 Cookies security: ${isProduction ? 'PRODUCTION with Secure flag' : 'DEVELOPMENT without Secure flag'}`);
+        
         // Устанавливаем новые токены в cookies
         const maxAge = expires_in ? expires_in * 1000 : 3600 * 1000; // 1 час по умолчанию
         
         const newCookies = [
-            `access_token=${access_token}; HttpOnly; Secure; SameSite=Lax; Max-Age=${Math.floor(maxAge/1000)}; Path=/`
+            `access_token=${access_token}; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(maxAge/1000)}; Path=/${isProduction ? '; Secure' : ''}`
         ];
 
         // Если пришел новый refresh token, обновляем и его
         if (newRefreshToken) {
-            newCookies.push(`refresh_token=${newRefreshToken}; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000; Path=/`);
+            newCookies.push(`refresh_token=${newRefreshToken}; HttpOnly; SameSite=Lax; Max-Age=2592000; Path=/${isProduction ? '; Secure' : ''}`);
         }
 
         res.setHeader('Set-Cookie', newCookies);

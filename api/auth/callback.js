@@ -96,14 +96,29 @@ export default async function handler(req, res) {
         // Устанавливаем токены в HttpOnly cookies для безопасности
         const maxAge = expires_in ? expires_in * 1000 : 3600 * 1000; // 1 час по умолчанию
         
-        // Пробуем без Secure для Vercel
+        // Проверяем окружение для добавления флага Secure
+        const isProduction = process.env.NODE_ENV === 'production';
+        console.log(`🔒 Cookies security: ${isProduction ? 'PRODUCTION with Secure flag' : 'DEVELOPMENT without Secure flag'}`);
+        
+        // Базовые настройки для всех cookies
+        const cookieOptions = {
+            httpOnly: true,
+            sameSite: 'Lax',
+            path: '/',
+            secure: isProduction // Secure флаг только в production
+        };
+        
+        // Создаем cookies с правильными настройками
         const responseCookies = [
-            `access_token=${access_token}; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(maxAge/1000)}; Path=/`,
-            `oauth_state=; HttpOnly; SameSite=Lax; Max-Age=0; Path=/` // удаляем state cookie
+            // Access token cookie
+            `access_token=${access_token}; HttpOnly; SameSite=${cookieOptions.sameSite}; Path=${cookieOptions.path}; Max-Age=${Math.floor(maxAge/1000)}${isProduction ? '; Secure' : ''}`,
+            // Удаляем state cookie
+            `oauth_state=; HttpOnly; SameSite=${cookieOptions.sameSite}; Path=${cookieOptions.path}; Max-Age=0${isProduction ? '; Secure' : ''}`
         ];
 
+        // Добавляем refresh token если есть
         if (refresh_token) {
-            responseCookies.push(`refresh_token=${refresh_token}; HttpOnly; SameSite=Lax; Max-Age=2592000; Path=/`); // 30 дней
+            responseCookies.push(`refresh_token=${refresh_token}; HttpOnly; SameSite=${cookieOptions.sameSite}; Path=${cookieOptions.path}; Max-Age=2592000${isProduction ? '; Secure' : ''}`); // 30 дней
         }
 
         console.log('🔍 [DEBUG] Setting cookies:', responseCookies);
