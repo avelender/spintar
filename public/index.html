@@ -822,7 +822,7 @@
             </div>
         </div>
     </div>
-    <div class="game-wrapper">
+    <div class="game-wrapper" id="gameWrapper">
         <div class="game-container">
         <!-- Левая колонка: Барабаны -->
         <div class="slot-machine-container">
@@ -1036,6 +1036,7 @@
             const loginPanel = document.getElementById('loginPanel');
             const userName = document.getElementById('userName');
             const userScore = document.getElementById('userScore');
+            const gameWrapper = document.getElementById('gameWrapper');
 
             if (isLoggedIn && currentUser) {
                 console.log('🔄 [DEBUG] Показываем интерфейс авторизованного пользователя');
@@ -1046,6 +1047,9 @@
                     
                     loginPanel.style.display = 'none';
                     console.log('✅ [DEBUG] loginPanel скрыт');
+                    
+                    gameWrapper.style.display = 'block';
+                    console.log('✅ [DEBUG] gameWrapper показан');
                     
                     userName.textContent = currentUser.username;
                     console.log('✅ [DEBUG] username установлен');
@@ -1062,6 +1066,8 @@
                 console.log('🔄 [DEBUG] Показываем интерфейс для неавторизованного пользователя');
                 userInfo.style.display = 'none';
                 loginPanel.style.display = 'flex';
+                gameWrapper.style.display = 'none';
+                console.log('✅ [DEBUG] gameWrapper скрыт');
             }
         }
 
