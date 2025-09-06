@@ -1205,10 +1205,12 @@
 
         // Функция обработки бонусов/штрафов для друзей/врагов
         async function processFriendEnemyBonuses(winnerUsername, winnings) {
-            if (!winnerUsername || !playerRelations) return;
+            if (!winnerUsername || !playerRelations) return { friendBonus: null, enemyPenalty: null };
             
             const bonusAmount = Math.floor(winnings * 0.1); // 10% от выигрыша
-            if (bonusAmount <= 0) return;
+            if (bonusAmount <= 0) return { friendBonus: null, enemyPenalty: null };
+            
+            const result = { friendBonus: null, enemyPenalty: null };
             
             try {
                 // Начисляем бонус другу
@@ -1216,7 +1218,7 @@
                     const friendName = playerRelations.friend;
                     console.log(`💝 Начисляем +${bonusAmount} другу ${friendName}`);
                     await updatePlayerScore(friendName, bonusAmount);
-                    addHistoryItem('bonus', `Friend bonus: +${bonusAmount} to ${friendName}`);
+                    result.friendBonus = { name: friendName, amount: bonusAmount };
                 }
                 
                 // Списываем штраф с врага  
@@ -1224,11 +1226,13 @@
                     const enemyName = playerRelations.enemy;
                     console.log(`💩 Списываем -${bonusAmount} с врага ${enemyName}`);
                     await updatePlayerScore(enemyName, -bonusAmount);
-                    addHistoryItem('penalty', `Enemy penalty: -${bonusAmount} from ${enemyName}`);
+                    result.enemyPenalty = { name: enemyName, amount: bonusAmount };
                 }
             } catch (error) {
                 console.log('❌ Ошибка обработки бонусов друзей/врагов:', error);
             }
+            
+            return result;
         }
 
         // Проверяем параметры URL при загрузке
@@ -2079,13 +2083,22 @@
                 const username = getCurrentUsername();
                 await updatePlayerScore(username, winnings);
                 
-                // Начисляем/списываем бонусы друзьям/врагам
-                await processFriendEnemyBonuses(username, winnings);
-                
                 // Показываем чистый выигрыш (за вычетом стоимости спина)
                 const netWin = winnings - 100;
+                
                 if (netWin > 0) {
-                    addHistoryItem('win', `Win: +${netWin}`);
+                    // Только при реальном выигрыше начисляем/списываем бонусы друзьям/врагам
+                    const bonusResult = await processFriendEnemyBonuses(username, winnings);
+                    
+                    let message = `Win: +${netWin}`;
+                    if (bonusResult.friendBonus) {
+                        message += ` (❤️+${bonusResult.friendBonus.amount} to ${bonusResult.friendBonus.name})`;
+                    }
+                    if (bonusResult.enemyPenalty) {
+                        message += ` (💩-${bonusResult.enemyPenalty.amount} from ${bonusResult.enemyPenalty.name})`;
+                    }
+                    
+                    addHistoryItem('win', message);
                 } else if (netWin === 0) {
                     addHistoryItem('loss', `Break even: 0`);
                 } else {
