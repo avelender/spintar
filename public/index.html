@@ -1102,20 +1102,27 @@
                 const responseData = await response.json();
                 console.log('🔐 [DEBUG] Ответ сервера JSON:', responseData);
                 
-                // Получаем токен из cookie
-                const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-                    const [key, value] = cookie.trim().split('=');
-                    acc[key] = value;
-                    return acc;
-                }, {});
+                // Пробуем получить токен из ответа сервера
+                let firebaseToken = responseData.token;
                 
-                console.log('🔐 [DEBUG] Все cookies:', cookies);
-                
-                const firebaseToken = cookies.firebase_token;
+                // Если токена нет в ответе, пробуем получить из cookie
+                if (!firebaseToken) {
+                    console.log('🔐 [DEBUG] Токен не найден в ответе, пробуем получить из cookie');
+                    
+                    const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+                        const [key, value] = cookie.trim().split('=');
+                        acc[key] = value;
+                        return acc;
+                    }, {});
+                    
+                    console.log('🔐 [DEBUG] Все cookies:', cookies);
+                    
+                    firebaseToken = cookies.firebase_token;
+                }
                 
                 if (!firebaseToken) {
-                    console.error('❌ [DEBUG] Firebase токен не найден в cookies');
-                    throw new Error('Не найден Firebase токен в cookie');
+                    console.error('❌ [DEBUG] Firebase токен не найден ни в ответе, ни в cookies');
+                    throw new Error('Не найден Firebase токен');
                 }
                 
                 console.log('🔐 [DEBUG] Firebase токен найден, длина:', firebaseToken.length);
