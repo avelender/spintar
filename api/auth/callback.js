@@ -94,15 +94,16 @@ export default async function handler(req, res) {
 
         // Устанавливаем токены в HttpOnly cookies для безопасности
         const maxAge = expires_in ? expires_in * 1000 : 3600 * 1000; // 1 час по умолчанию
-        
-        // Пробуем без Secure для Vercel
+        const isSecure = req.headers['x-forwarded-proto'] === 'https' || req.headers['x-forwarded-protocol'] === 'https' || process.env.NODE_ENV === 'production';
+        const secureFlag = isSecure ? '; Secure' : '';
+
         const responseCookies = [
-            `access_token=${access_token}; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(maxAge/1000)}; Path=/`,
-            `oauth_state=; HttpOnly; SameSite=Lax; Max-Age=0; Path=/` // удаляем state cookie
+            `access_token=${access_token}; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(maxAge/1000)}; Path=/${secureFlag}`,
+            `oauth_state=; HttpOnly; SameSite=Lax; Max-Age=0; Path=/${secureFlag}` // удаляем state cookie
         ];
 
         if (refresh_token) {
-            responseCookies.push(`refresh_token=${refresh_token}; HttpOnly; SameSite=Lax; Max-Age=2592000; Path=/`); // 30 дней
+            responseCookies.push(`refresh_token=${refresh_token}; HttpOnly; SameSite=Lax; Max-Age=2592000; Path=/${secureFlag}`); // 30 дней
         }
 
         console.log('🔍 [DEBUG] Setting cookies:', responseCookies);

@@ -6,6 +6,7 @@ export default async function handler(req, res) {
     }
 
     try {
+        const isDev = process.env.NODE_ENV !== 'production';
         // Получаем access_token из cookies
         const cookies = req.headers.cookie?.split(';').reduce((acc, cookie) => {
             const [key, value] = cookie.trim().split('=');
@@ -14,9 +15,10 @@ export default async function handler(req, res) {
         }, {}) || {};
 
         const accessToken = cookies.access_token;
-        console.log('🔍 [DEBUG] Access token exists:', !!accessToken);
-        console.log('🔍 [DEBUG] Access token length:', accessToken?.length);
-        console.log('🔍 [DEBUG] Token first 50 chars:', accessToken?.substring(0, 50));
+        if (isDev) {
+            console.log('🔍 [DEBUG] Access token exists:', !!accessToken);
+            console.log('🔍 [DEBUG] Access token length:', accessToken?.length);
+        }
 
         if (!accessToken) {
             console.log('❌ [DEBUG] No access token found in cookies');
@@ -28,20 +30,19 @@ export default async function handler(req, res) {
         let decodedPayload;
         try {
             const tokenParts = accessToken.split('.');
-            console.log(' [DEBUG] Token parts count:', tokenParts.length);
+            if (isDev) console.log(' [DEBUG] Token parts count:', tokenParts.length);
             
             const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
             username = payload.user?.username || payload.username || payload.sub;
-            console.log(' [DEBUG] Extracted username:', username);
+            if (isDev) console.log(' [DEBUG] Extracted username:', username);
         } catch (error) {
-            console.log(' [DEBUG] JWT decode error:', error.message);
+            if (isDev) console.log(' [DEBUG] JWT decode error:', error.message);
         }
 
         // Если не удалось получить username из токена, пробуем без параметров
         const requestBody = username ? { username } : {};
-        console.log('🔍 [DEBUG] Request body for API:', JSON.stringify(requestBody));
-
-        console.log('🚀 [DEBUG] Making API request to /api/v1/user/profile');
+        if (isDev) console.log('🔍 [DEBUG] Request body for API:', JSON.stringify(requestBody));
+        if (isDev) console.log('🚀 [DEBUG] Making API request to /api/v1/user/profile');
         
         // Запрашиваем профиль пользователя через API орбитара
         const profileResponse = await fetch('https://api.orbitar.space/api/v1/user/profile', {
@@ -55,8 +56,10 @@ export default async function handler(req, res) {
             body: JSON.stringify(requestBody)
         });
         
-        console.log('📡 [DEBUG] API Response status:', profileResponse.status);
-        console.log('📡 [DEBUG] API Response headers:', Object.fromEntries(profileResponse.headers.entries()));
+        if (isDev) {
+            console.log('📡 [DEBUG] API Response status:', profileResponse.status);
+            console.log('📡 [DEBUG] API Response headers:', Object.fromEntries(profileResponse.headers.entries()));
+        }
 
         if (!profileResponse.ok) {
             const errorText = await profileResponse.text();
@@ -71,7 +74,7 @@ export default async function handler(req, res) {
         }
 
         const profileData = await profileResponse.json();
-        console.log('🔍 [DEBUG] Full API response:', JSON.stringify(profileData, null, 2));
+        if (isDev) console.log('🔍 [DEBUG] Full API response:', JSON.stringify(profileData, null, 2));
         
         // Проверяем структуру ответа API
         if (!profileData.payload || !profileData.payload.profile) {
@@ -80,7 +83,7 @@ export default async function handler(req, res) {
         }
 
         const userProfile = profileData.payload.profile;
-        console.log('✅ Профиль пользователя получен:', userProfile.username);
+        if (isDev) console.log('✅ Профиль пользователя получен:', userProfile.username);
 
         // Возвращаем только необходимые данные (без лишней информации)
         res.status(200).json({
