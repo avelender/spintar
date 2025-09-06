@@ -1,14 +1,29 @@
 // Импортируем Firebase Admin SDK
 import admin from 'firebase-admin';
 
+// Добавляем отладочные логи
+console.log('🔍 [DEBUG] Переменные окружения:');
+console.log('- FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID ? 'есть' : 'отсутствует');
+console.log('- FIREBASE_ADMIN_CLIENT_EMAIL:', process.env.FIREBASE_ADMIN_CLIENT_EMAIL ? 'есть' : 'отсутствует');
+console.log('- FIREBASE_ADMIN_PRIVATE_KEY:', process.env.FIREBASE_ADMIN_PRIVATE_KEY ? 'есть' : 'отсутствует');
+
 // Инициализируем Firebase Admin SDK, если еще не инициализирован
 if (!admin.apps.length) {
   try {
+    // Проверяем наличие всех необходимых переменных
+    if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_ADMIN_CLIENT_EMAIL || !process.env.FIREBASE_ADMIN_PRIVATE_KEY) {
+      throw new Error('Отсутствуют необходимые переменные окружения для Firebase Admin SDK');
+    }
+    
+    // Преобразуем приватный ключ
+    const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY.replace(/\\n/g, '\n');
+    console.log('🔍 [DEBUG] Приватный ключ начинается с:', privateKey.substring(0, 20) + '...');
+    
     admin.initializeApp({
       credential: admin.credential.cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        privateKey: privateKey,
       }),
     });
     console.log('✅ Firebase Admin SDK успешно инициализирован');
@@ -37,37 +52,32 @@ export default async function handler(req, res) {
             return res.status(401).json({ error: 'Not authenticated' });
         }
 
-        // Получаем данные пользователя из API профиля
-        const profileResponse = await fetch(`${process.env.VERCEL_URL || 'http://localhost:3000'}/api/profile`, {
-            headers: {
-                cookie: `access_token=${accessToken}`
-            }
-        });
-
-        if (!profileResponse.ok) {
-            return res.status(401).json({ error: 'Failed to get user profile' });
-        }
-
-        const userData = await profileResponse.json();
-        const { username } = userData;
-
-        if (!username) {
-            return res.status(401).json({ error: 'No username found' });
-        }
+        // Получаем имя пользователя из параметров запроса или из cookie
+        console.log('🔐 [DEBUG] Получаем имя пользователя');
+        
+        // Пробуем получить имя пользователя из разных источников
+        let userIdentifier = req.query.username || cookies.username || 'guest_' + Math.random().toString(36).substring(2, 10);
+        
+        console.log(`🔐 [DEBUG] Имя пользователя/идентификатор: ${userIdentifier}`);
 
         // Создаем кастомный токен Firebase
-        const firebaseToken = await admin.auth().createCustomToken(username);
-        console.log(`✅ Создан Firebase токен для пользователя: ${username}`);
+        try {
+            const firebaseToken = await admin.auth().createCustomToken(userIdentifier);
+            console.log(`✅ Создан Firebase токен для пользователя: ${userIdentifier}`);
 
-        // Проверяем окружение для добавления флага Secure
-        const isProduction = process.env.NODE_ENV === 'production';
-        
-        // Устанавливаем токен в cookie
-        res.setHeader('Set-Cookie', [
-            `firebase_token=${firebaseToken}; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600${isProduction ? '; Secure' : ''}`
-        ]);
+            // Проверяем окружение для добавления флага Secure
+            const isProduction = process.env.NODE_ENV === 'production';
+            
+            // Устанавливаем токен в cookie
+            res.setHeader('Set-Cookie', [
+                `firebase_token=${firebaseToken}; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600${isProduction ? '; Secure' : ''}`
+            ]);
 
-        res.status(200).json({ success: true });
+            res.status(200).json({ success: true });
+        } catch (tokenError) {
+            console.error('❌ Ошибка создания токена:', tokenError);
+            res.status(500).json({ error: 'Failed to create Firebase token' });
+        }
     } catch (error) {
         console.error('❌ Ошибка генерации Firebase token:', error);
         res.status(500).json({ error: 'Internal server error' });

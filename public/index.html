@@ -1073,8 +1073,18 @@
             try {
                 console.log('🔐 [DEBUG] Получаем Firebase токен с сервера...');
                 
+                // Проверяем, есть ли имя пользователя
+                if (!currentUser || !currentUser.username) {
+                    console.error('❌ [DEBUG] Нет имени пользователя для авторизации в Firebase');
+                }
+                
+                // Добавляем имя пользователя в URL запроса
+                const username = currentUser?.username || 'guest_' + Math.random().toString(36).substring(2, 10);
+                const url = `/api/auth/firebase-token?username=${encodeURIComponent(username)}`;
+                console.log(`🔐 [DEBUG] Запрашиваем токен для пользователя: ${username}`);
+                
                 // Получаем Firebase токен с сервера
-                const response = await fetch('/api/auth/firebase-token', {
+                const response = await fetch(url, {
                     credentials: 'include'
                 });
                 
