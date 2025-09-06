@@ -1512,6 +1512,22 @@
         // Сохраняем данные в Firebase Firestore
         async function saveScores() {
             try {
+                // Проверяем статус авторизации в Firebase
+                const currentFirebaseUser = window.firebaseAuth.currentUser;
+                console.log('🔐 [SAVE] Текущий пользователь Firebase:', currentFirebaseUser ? currentFirebaseUser.uid : 'не авторизован');
+                
+                if (!currentFirebaseUser) {
+                    console.log('🔐 [SAVE] Попытка авторизации в Firebase...');
+                    try {
+                        await authenticateWithFirebase();
+                        console.log('🔐 [SAVE] Авторизация выполнена, проверяем статус...');
+                        const userAfterAuth = window.firebaseAuth.currentUser;
+                        console.log('🔐 [SAVE] Статус после авторизации:', userAfterAuth ? userAfterAuth.uid : 'не авторизован');
+                    } catch (authError) {
+                        console.error('❌ [SAVE] Ошибка авторизации:', authError);
+                    }
+                }
+                
                 const gameDocRef = window.firebaseDoc(window.firebaseDB, 'scores', 'game_data');
                 const gameData = {
                     playerScores: playerScores,
