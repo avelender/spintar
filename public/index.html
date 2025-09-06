@@ -1305,10 +1305,12 @@
             const time = new Date();
             const timeStr = time.toLocaleTimeString();
             
-            item.innerHTML = `
-                <span>${message}</span>
-                <span class="history-time">${timeStr}</span>
-            `;
+            // 🔒 БЕЗОПАСНОЕ создание истории без innerHTML
+            const messageSpan = createSafeElement('span', '', message); // textContent экранирует автоматически
+            const timeSpan = createSafeElement('span', 'history-time', timeStr);
+            
+            item.appendChild(messageSpan);
+            item.appendChild(timeSpan);
             
             // Добавляем элемент в начало списка
             if (historyList.firstChild) {
@@ -1443,6 +1445,21 @@
             }
         }
 
+        // 🔒 ФУНКЦИЯ ДЛЯ ЗАЩИТЫ ОТ XSS - экранирует HTML символы
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 🔒 БЕЗОПАСНАЯ ФУНКЦИЯ для создания HTML элементов с текстом
+        function createSafeElement(tagName, className, textContent) {
+            const element = document.createElement(tagName);
+            if (className) element.className = className;
+            if (textContent) element.textContent = textContent; // textContent безопасен!
+            return element;
+        }
+
         // Загружаем из localStorage с обработкой ошибок
         async function loadLocalScoresWithFallback() {
             try {
@@ -1552,52 +1569,60 @@
             if (sortedPlayers.length === 0) {
                 leaderboard.innerHTML = '<div class="no-scores">No players yet</div>';
             } else {
-                leaderboard.innerHTML = sortedPlayers.map(([username, score], index) => {
+                leaderboard.innerHTML = ''; // Очищаем
+                
+                sortedPlayers.forEach(([username, score], index) => {
                     const medals = ['🥇', '🥈', '🥉'];
                     const medal = index < 3 ? medals[index] : `${index + 1}.`;
                     
-                    // Кнопки друзей/врагов показываем только авторизованным пользователям
-                    let relationButtons = '';
-                    if (isLoggedIn && currentUser) {
-                        // Определяем состояние кнопок на основе сохраненных отношений
+                    // Создаем элемент безопасно
+                    const item = document.createElement('div');
+                    item.className = 'leaderboard-item';
+                    
+                    // Ранг
+                    const rankSpan = createSafeElement('span', 'rank', medal);
+                    item.appendChild(rankSpan);
+                    
+                    // Кнопки друзей/врагов
+                    if (isLoggedIn && currentUser && username !== currentUser.username) {
+                        const playerRelations = window.gameData?.playerRelations?.[currentUser.username] || {};
                         const isFriend = playerRelations.friend === username;
                         const isEnemy = playerRelations.enemy === username;
                         
-                        const friendClass = isFriend ? 'relation-btn active' : 'relation-btn';
-                        const enemyClass = isEnemy ? 'relation-btn active' : 'relation-btn';
+                        const relationButtons = document.createElement('span');
+                        relationButtons.className = 'relation-buttons';
                         
-                        let friendTitle = isFriend ? 'Remove from friends' : 'Add as friend';
-                        let enemyTitle = isEnemy ? 'Remove from enemies' : 'Add as enemy';
+                        // Кнопка друга
+                        const friendBtn = document.createElement('button');
+                        friendBtn.className = isFriend ? 'relation-btn active friend' : 'relation-btn friend';
+                        friendBtn.dataset.type = 'friend';
+                        friendBtn.dataset.target = escapeHtml(username); // 🔒 ЭКРАНИРУЕМ!
+                        friendBtn.title = isFriend ? 'Remove from friends' : 'Add as friend';
+                        friendBtn.textContent = '❤️';
                         
-                        // Для своего никнейма показываем информацию о том, кто добавил в друзья/враги
-                        if (username === currentUser.username && window.currentUserRelationIndex) {
-                            const { friendedBy = [], enemiedBy = [] } = window.currentUserRelationIndex;
-                            
-                            if (friendedBy.length > 0) {
-                                friendTitle = `You are friends with: ${friendedBy.join(', ')}`;
-                            }
-                            if (enemiedBy.length > 0) {
-                                enemyTitle = `You are enemies with: ${enemiedBy.join(', ')}`;
-                            }
-                        }
+                        // Кнопка врага
+                        const enemyBtn = document.createElement('button');
+                        enemyBtn.className = isEnemy ? 'relation-btn active enemy' : 'relation-btn enemy';
+                        enemyBtn.dataset.type = 'enemy';
+                        enemyBtn.dataset.target = escapeHtml(username); // 🔒 ЭКРАНИРУЕМ!
+                        enemyBtn.title = isEnemy ? 'Remove from enemies' : 'Add as enemy';
+                        enemyBtn.textContent = '💩';
                         
-                        relationButtons = `
-                            <span class="relation-buttons">
-                                <button class="${friendClass}" data-type="friend" data-target="${username}" title="${friendTitle}">❤️</button>
-                                <button class="${enemyClass}" data-type="enemy" data-target="${username}" title="${enemyTitle}">💩</button>
-                            </span>
-                        `;
+                        relationButtons.appendChild(friendBtn);
+                        relationButtons.appendChild(enemyBtn);
+                        item.appendChild(relationButtons);
                     }
                     
-                    return `
-                        <div class="leaderboard-item">
-                            <span class="rank">${medal}</span>
-                            ${relationButtons}
-                            <span class="username">${username}</span>
-                            <span class="score">${score}</span>
-                        </div>
-                    `;
-                }).join('');
+                    // Username - БЕЗОПАСНО через textContent
+                    const usernameSpan = createSafeElement('span', 'username', username);
+                    item.appendChild(usernameSpan);
+                    
+                    // Score
+                    const scoreSpan = createSafeElement('span', 'score', score.toString());
+                    item.appendChild(scoreSpan);
+                    
+                    leaderboard.appendChild(item);
+                });
             }
             
             console.log(`🎨 Рейтинг обновлен (${dataSource}):`, playerScores);
