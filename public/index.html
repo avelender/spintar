@@ -6,16 +6,15 @@
     <title>Spintar</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎰</text></svg>">
     <!-- Firebase SDK -->
-    <script type="module">
-        // Import Firebase modules
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
-        import { getAuth, signInWithCustomToken, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
-        
-        // Firebase configuration (используем Vercel env или fallback)
+    <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-auth-compat.js"></script>
+    
+    <script>
+        // Firebase configuration (как было утром)
         const firebaseConfig = {
-            apiKey: "AIzaSyA4fhatF4D1V1w9_JZNI1fVHpjAHxt8h7g", 
-            authDomain: "randotar-35bf7.firebaseapp.com",
+            apiKey: "AIzaSyA4fhatF4D1V1w9_JZNI1fVHpjAHxt8h7g",
+            authDomain: "randotar-35bf7.firebaseapp.com", 
             projectId: "randotar-35bf7",
             storageBucket: "randotar-35bf7.firebasestorage.app",
             messagingSenderId: "109301915648",
@@ -23,19 +22,13 @@
         };
         
         // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        firebase.initializeApp(firebaseConfig);
+        const firebaseDB = firebase.firestore();
+        const firebaseAuth = firebase.auth();
         
         // Make Firebase available globally
-        window.firebaseDB = db;
-        window.firebaseDoc = doc;
-        window.firebaseGetDoc = getDoc;
-        window.firebaseSetDoc = setDoc;
-        window.firebaseOnSnapshot = onSnapshot;
-        window.firebaseAuth = auth;
-        window.firebaseSignInWithCustomToken = signInWithCustomToken;
-        window.firebaseOnAuthStateChanged = onAuthStateChanged;
+        window.firebaseDB = firebaseDB;
+        window.firebaseAuth = firebaseAuth;
     </script>
     <style>
         :root {
@@ -1311,10 +1304,10 @@
         async function loadSavedScores() {
             try {
                 console.log('🔥 Firebase: Загружаем данные игры...');
-                const gameDocRef = window.firebaseDoc(window.firebaseDB, 'scores', 'game_data');
-                const docSnap = await window.firebaseGetDoc(gameDocRef);
+                const gameDocRef = window.firebaseDB.collection('scores').doc('game_data');
+                const docSnap = await gameDocRef.get();
                 
-                if (docSnap.exists()) {
+                if (docSnap.exists) {
                     const data = docSnap.data();
                     console.log('✅ Firebase: Данные загружены!', data);
                     
@@ -1733,8 +1726,8 @@
         // Проверяем подключение к Firebase при запуске
         async function testFirebaseConnection() {
             try {
-                const gameDocRef = window.firebaseDoc(window.firebaseDB, 'scores', 'game_data');
-                await window.firebaseGetDoc(gameDocRef);
+                const gameDocRef = window.firebaseDB.collection('scores').doc('game_data');
+                await gameDocRef.get();
                 console.log('✅ Firebase подключение успешно!');
                 return true;
             } catch (error) {
