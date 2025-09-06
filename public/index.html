@@ -1584,32 +1584,60 @@
                     item.appendChild(rankSpan);
                     
                     // Кнопки друзей/врагов
-                    if (isLoggedIn && currentUser && username !== currentUser.username) {
-                        const playerRelations = window.gameData?.playerRelations?.[currentUser.username] || {};
-                        const isFriend = playerRelations.friend === username;
-                        const isEnemy = playerRelations.enemy === username;
-                        
+                    if (isLoggedIn && currentUser) {
                         const relationButtons = document.createElement('span');
                         relationButtons.className = 'relation-buttons';
                         
-                        // Кнопка друга
-                        const friendBtn = document.createElement('button');
-                        friendBtn.className = isFriend ? 'relation-btn active friend' : 'relation-btn friend';
-                        friendBtn.dataset.type = 'friend';
-                        friendBtn.dataset.target = escapeHtml(username); // 🔒 ЭКРАНИРУЕМ!
-                        friendBtn.title = isFriend ? 'Remove from friends' : 'Add as friend';
-                        friendBtn.textContent = '❤️';
+                        if (username === currentUser.username) {
+                            // ДЛЯ СОБСТВЕННОГО НИКНЕЙМА - показываем кто добавил в друзья/враги
+                            const { friendedBy = [], enemiedBy = [] } = window.currentUserRelationIndex || {};
+                            
+                            // Кнопка "кто добавил в друзья"
+                            const friendBtn = document.createElement('button');
+                            friendBtn.className = 'relation-btn info friend';
+                            friendBtn.disabled = true; // Неактивная
+                            friendBtn.title = friendedBy.length > 0 ? 
+                                `You are friended by: ${friendedBy.join(', ')}` : 
+                                'Nobody added you as friend yet';
+                            friendBtn.textContent = '❤️';
+                            
+                            // Кнопка "кто добавил во враги"
+                            const enemyBtn = document.createElement('button');
+                            enemyBtn.className = 'relation-btn info enemy';
+                            enemyBtn.disabled = true; // Неактивная
+                            enemyBtn.title = enemiedBy.length > 0 ? 
+                                `You are enemied by: ${enemiedBy.join(', ')}` : 
+                                'Nobody added you as enemy yet';
+                            enemyBtn.textContent = '💩';
+                            
+                            relationButtons.appendChild(friendBtn);
+                            relationButtons.appendChild(enemyBtn);
+                        } else {
+                            // ДЛЯ ДРУГИХ ИГРОКОВ - обычные кнопки добавить/убрать
+                            const playerRelations = window.gameData?.playerRelations?.[currentUser.username] || {};
+                            const isFriend = playerRelations.friend === username;
+                            const isEnemy = playerRelations.enemy === username;
+                            
+                            // Кнопка друга
+                            const friendBtn = document.createElement('button');
+                            friendBtn.className = isFriend ? 'relation-btn active friend' : 'relation-btn friend';
+                            friendBtn.dataset.type = 'friend';
+                            friendBtn.dataset.target = escapeHtml(username); // 🔒 ЭКРАНИРУЕМ!
+                            friendBtn.title = isFriend ? 'Remove from friends' : 'Add as friend';
+                            friendBtn.textContent = '❤️';
+                            
+                            // Кнопка врага
+                            const enemyBtn = document.createElement('button');
+                            enemyBtn.className = isEnemy ? 'relation-btn active enemy' : 'relation-btn enemy';
+                            enemyBtn.dataset.type = 'enemy';
+                            enemyBtn.dataset.target = escapeHtml(username); // 🔒 ЭКРАНИРУЕМ!
+                            enemyBtn.title = isEnemy ? 'Remove from enemies' : 'Add as enemy';
+                            enemyBtn.textContent = '💩';
+                            
+                            relationButtons.appendChild(friendBtn);
+                            relationButtons.appendChild(enemyBtn);
+                        }
                         
-                        // Кнопка врага
-                        const enemyBtn = document.createElement('button');
-                        enemyBtn.className = isEnemy ? 'relation-btn active enemy' : 'relation-btn enemy';
-                        enemyBtn.dataset.type = 'enemy';
-                        enemyBtn.dataset.target = escapeHtml(username); // 🔒 ЭКРАНИРУЕМ!
-                        enemyBtn.title = isEnemy ? 'Remove from enemies' : 'Add as enemy';
-                        enemyBtn.textContent = '💩';
-                        
-                        relationButtons.appendChild(friendBtn);
-                        relationButtons.appendChild(enemyBtn);
                         item.appendChild(relationButtons);
                     }
                     
