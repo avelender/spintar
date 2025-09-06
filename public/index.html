@@ -1018,6 +1018,9 @@
                     isLoggedIn = true;
                     console.log('✅ Пользователь авторизован:', userData.username);
                     console.log('🔍 [DEBUG] checkAuthStatus завершен успешно');
+                    
+                    // Авторизуемся в Firebase
+                    await authenticateWithFirebase();
                 } else if (response.status === 401) {
                     console.log('🔍 [DEBUG] 401 - токен истек, пытаемся обновить...');
                     
@@ -1063,6 +1066,43 @@
             console.log('🔄 [DEBUG] Обновляем UI...');
             updateAuthUI();
             console.log('✅ [DEBUG] checkAuthStatus полностью завершен');
+        }
+
+        // Функция для авторизации в Firebase
+        async function authenticateWithFirebase() {
+            try {
+                console.log('🔐 Получаем Firebase токен с сервера...');
+                
+                // Получаем Firebase токен с сервера
+                const response = await fetch('/api/auth/firebase-token', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Ошибка получения Firebase токена: ${response.status}`);
+                }
+                
+                // Получаем токен из cookie
+                const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+                    const [key, value] = cookie.trim().split('=');
+                    acc[key] = value;
+                    return acc;
+                }, {});
+                
+                const firebaseToken = cookies.firebase_token;
+                
+                if (!firebaseToken) {
+                    throw new Error('Не найден Firebase токен в cookie');
+                }
+                
+                // Авторизуемся в Firebase
+                await window.firebaseAuth.signInWithCustomToken(firebaseToken);
+                console.log('✅ Успешная авторизация в Firebase');
+                return true;
+            } catch (error) {
+                console.error('❌ Ошибка авторизации в Firebase:', error);
+                return false;
+            }
         }
 
         function updateAuthUI() {
