@@ -1075,28 +1075,64 @@
         // Функции для работы с отношениями друзей/врагов
         async function savePlayerRelation(target, type, action) {
             try {
-                const response = await fetch('/api/relations', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        target: target,
-                        type: type,
-                        action: action
-                    })
-                });
-
-                const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to save relation');
+                console.log('🔄 Сохраняем отношение напрямую в Firebase:', { target, type, action });
+                
+                if (!currentUser) {
+                    throw new Error('User not logged in');
                 }
 
-                console.log('✅ Отношение сохранено:', data.message);
-                return data;
+                const username = currentUser.username;
+
+                // Сохраняем в playerRelations
+                const playerRelationPath = `playerRelations/${username}/${type}`;
+                if (action === 'add') {
+                    await window.firebaseDB.ref(playerRelationPath).set(target);
+                    // Убираем противоположное отношение
+                    const oppositeType = type === 'friend' ? 'enemy' : 'friend';
+                    await window.firebaseDB.ref(`playerRelations/${username}/${oppositeType}`).set(null);
+                } else {
+                    await window.firebaseDB.ref(playerRelationPath).set(null);
+                }
+
+                // Обновляем relationIndex
+                const relationIndexRef = window.firebaseDB.ref(`relationIndex/${target}`);
+                const snapshot = await relationIndexRef.once('value');
+                const currentData = snapshot.val() || {};
+
+                if (action === 'add') {
+                    // Добавляем в новый тип
+                    if (!currentData[`${type}edBy`]) {
+                        currentData[`${type}edBy`] = [];
+                    }
+                    if (!currentData[`${type}edBy`].includes(username)) {
+                        currentData[`${type}edBy`].push(username);
+                    }
+
+                    // Убираем из противоположного типа
+                    const oppositeType = type === 'friend' ? 'enemy' : 'friend';
+                    if (currentData[`${oppositeType}edBy`]) {
+                        currentData[`${oppositeType}edBy`] = currentData[`${oppositeType}edBy`].filter(u => u !== username);
+                        if (currentData[`${oppositeType}edBy`].length === 0) {
+                            currentData[`${oppositeType}edBy`] = null;
+                        }
+                    }
+                } else {
+                    // Убираем из текущего типа
+                    if (currentData[`${type}edBy`]) {
+                        currentData[`${type}edBy`] = currentData[`${type}edBy`].filter(u => u !== username);
+                        if (currentData[`${type}edBy`].length === 0) {
+                            currentData[`${type}edBy`] = null;
+                        }
+                    }
+                }
+
+                await relationIndexRef.set(currentData);
+
+                console.log('✅ Отношение сохранено в Firebase:', { target, type, action });
+                return { success: true, message: `${action === 'add' ? 'Added' : 'Removed'} ${target} as ${type}` };
+
             } catch (error) {
-                console.log('❌ Ошибка сохранения отношения:', error);
+                console.log('❌ Ошибка сохранения отношения в Firebase:', error);
                 throw error;
             }
         }
@@ -1108,20 +1144,12 @@
                     return;
                 }
 
-                const response = await fetch('/api/relations?mode=my_relations', {
-                    credentials: 'include'
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to load relations');
-                }
-
-                const data = await response.json();
-                playerRelations = data.relations || {};
+                const username = currentUser.username;
+                const snapshot = await window.firebaseDB.ref(`playerRelations/${username}`).once('value');
+                playerRelations = snapshot.val() || {};
                 console.log('✅ Отношения загружены из Firebase:', playerRelations);
             } catch (error) {
                 console.log('❌ Ошибка загрузки отношений из Firebase:', error);
-                // Без fallback к localStorage - всегда используем Firebase
                 playerRelations = {};
             }
         }
@@ -1130,16 +1158,14 @@
             try {
                 if (!currentUser) return { friendedBy: [], enemiedBy: [] };
 
-                const response = await fetch('/api/relations?mode=who_added_me', {
-                    credentials: 'include'
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to load relation index');
-                }
-
-                const data = await response.json();
-                return data.relationIndex || { friendedBy: [], enemiedBy: [] };
+                const username = currentUser.username;
+                const snapshot = await window.firebaseDB.ref(`relationIndex/${username}`).once('value');
+                const relationIndex = snapshot.val() || {};
+                
+                return {
+                    friendedBy: relationIndex.friendedBy || [],
+                    enemiedBy: relationIndex.enemiedBy || []
+                };
             } catch (error) {
                 console.log('❌ Ошибка загрузки списка кто добавил:', error);
                 return { friendedBy: [], enemiedBy: [] };

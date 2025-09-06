@@ -2,16 +2,21 @@ const admin = require('firebase-admin');
 
 // Инициализация Firebase Admin SDK (если еще не инициализирован в других модулях)
 if (!admin.apps.length) {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        databaseURL: process.env.FIREBASE_DATABASE_URL
-    });
+    try {
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            databaseURL: process.env.FIREBASE_DATABASE_URL
+        });
+    } catch (error) {
+        console.error('Failed to initialize Firebase Admin SDK:', error);
+        throw error;
+    }
 }
 
 const db = admin.database();
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     // Включаем CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
