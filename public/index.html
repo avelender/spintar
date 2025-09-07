@@ -88,6 +88,10 @@
             window.firebaseCollection = function(db, collectionPath) {
                 return db.collection(collectionPath);
             };
+            // Helper для транзакций Firestore (используется в claimBonus)
+            window.firebaseRunTransaction = function(db, updateFunction) {
+                return db.runTransaction(updateFunction);
+            };
             
             console.log('🔥 Firebase успешно инициализирован с безопасным конфигом');
             return true;
