@@ -8,14 +8,23 @@
  * @returns {boolean} - Результат валидации
  */
 export function validateUsername(username) {
-  // Проверяем, что username существует и является строкой
-  if (!username || typeof username !== 'string') {
+  try {
+    // Проверяем, что username существует и является строкой
+    if (username === undefined || username === null) {
+      return false;
+    }
+    
+    // Приведение к строке, если передан другой тип
+    const usernameStr = String(username);
+    
+    // Только буквы, цифры, подчеркивания, дефисы, 2-20 символов
+    const validPattern = /^[a-zA-Z0-9_-]{2,20}$/;
+    return validPattern.test(usernameStr);
+  } catch (error) {
+    // В случае любой ошибки возвращаем false
+    console.error('❌ Ошибка валидации имени пользователя:', error);
     return false;
   }
-  
-  // Только буквы, цифры, подчеркивания, дефисы, 2-20 символов
-  const validPattern = /^[a-zA-Z0-9_-]{2,20}$/;
-  return validPattern.test(username);
 }
 
 /**
@@ -75,14 +84,26 @@ export function validateRelationAction(action) {
  * @returns {string} - Санитизированная строка
  */
 export function sanitizeString(input) {
-  if (!input || typeof input !== 'string') {
+  try {
+    // Проверка на null/undefined
+    if (input === undefined || input === null) {
+      return '';
+    }
+    
+    // Приведение к строке, если передан другой тип
+    const inputStr = String(input);
+    
+    // Удаляем HTML-теги и специальные символы
+    return inputStr
+      .replace(/<[^>]*>/g, '') // Удаление HTML-тегов
+      .replace(/[<>'"`;(){}\[\]\\]/g, '') // Удаление потенциально опасных символов
+      .replace(/javascript:/gi, '') // Удаление javascript: протокола
+      .replace(/on\w+=/gi, '') // Удаление обработчиков событий (onclick, onload и т.д.)
+      .replace(/data:/gi, ''); // Удаление data: URL
+  } catch (error) {
+    console.error('❌ Ошибка санитизации строки:', error);
     return '';
   }
-  
-  // Удаляем HTML-теги и специальные символы
-  return input
-    .replace(/<[^>]*>/g, '') // Удаление HTML-тегов
-    .replace(/[<>'"`;()]/g, ''); // Удаление потенциально опасных символов
 }
 
 /**

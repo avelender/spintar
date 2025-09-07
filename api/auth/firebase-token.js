@@ -1,7 +1,7 @@
 // Импортируем Firebase Admin SDK
 import admin from 'firebase-admin';
 // Импортируем функции валидации
-import { validateUsername, sanitizeString } from '../utils/validation';
+import { validateUsername, sanitizeString } from '../../utils/validation';
 
 // Добавляем отладочные логи только в режиме разработки
 if (process.env.NODE_ENV !== 'production') {
