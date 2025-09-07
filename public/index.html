@@ -994,6 +994,10 @@
         let isLoggedIn = false;
         let playerScores = {};
         let isSpinning = false;
+        
+        // Переменные для предотвращения race condition при обновлении токена
+        let isRefreshingToken = false;
+        let refreshPromise = null;
         let bonusButton, bonusTimer;
         let isUpdatingFromFirebase = false; // Глобальная переменная для предотвращения зацикливания
         let playerRelations = {}; // Хранение связей друзей/врагов
@@ -1062,36 +1066,48 @@
                 } else if (response.status === 401) {
                     console.log('🔍 [DEBUG] 401 - токен истек, пытаемся обновить...');
                     
-                    // Получаем CSRF-токен для запроса
-                    const csrfToken = await getCsrfToken();
+                    // Проверяем, не обновляется ли уже токен другим запросом
+                    if (isRefreshingToken) {
+                        console.log('⏳ Токен уже обновляется другим запросом, ожидаем...');
+                        // Ждем завершения текущего обновления
+                        await refreshPromise;
+                        // После обновления токена повторяем запрос профиля
+                        return checkAuthStatus();
+                    }
                     
-                    // Пытаемся обновить токен через refresh
-                    const refreshResponse = await fetch('/api/auth/refresh', {
-                        method: 'POST',
-                        credentials: 'include',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-Token': csrfToken
+                    // Устанавливаем блокировку
+                    isRefreshingToken = true;
+                    
+                    // Создаем promise для обновления токена
+                    refreshPromise = (async () => {
+                        try {
+                            // Получаем CSRF-токен для запроса
+                            const csrfToken = await getCsrfToken();
+                            
+                            // Пытаемся обновить токен через refresh
+                            const refreshResponse = await fetch('/api/auth/refresh', {
+                                method: 'POST',
+                                credentials: 'include',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-Token': csrfToken
+                                }
+                            });
+                            
+                            return refreshResponse.ok;
+                        } finally {
+                            // Снимаем блокировку в любом случае
+                            isRefreshingToken = false;
                         }
-                    });
+                    })();
                     
-                    if (refreshResponse.ok) {
+                    // Ждем результат обновления
+                    const refreshSuccessful = await refreshPromise;
+                    
+                    if (refreshSuccessful) {
                         console.log('✅ Токен обновлен, повторяем проверку...');
                         // Повторяем запрос с обновленным токеном
-                        const retryResponse = await fetch('/api/profile', {
-                            credentials: 'include'
-                        });
-                        
-                        if (retryResponse.ok) {
-                            const userData = await retryResponse.json();
-                            currentUser = userData;
-                            isLoggedIn = true;
-                            console.log('✅ Пользователь авторизован после обновления токена:', userData.username);
-                        } else {
-                            console.log('❌ Не удалось получить профиль после обновления токена');
-                            currentUser = null;
-                            isLoggedIn = false;
-                        }
+                        return checkAuthStatus();
                     } else {
                         console.log('❌ Не удалось обновить токен');
                         currentUser = null;
