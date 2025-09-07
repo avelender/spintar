@@ -1,6 +1,6 @@
 // Импортируем Firebase Admin SDK
 import admin from 'firebase-admin';
-import { validateUsername } from '../utils/validation';
+import { validateUsername } from '../utils/validation.js';
 
 // Добавляем отладочные логи
 console.log('🔍 [DEBUG] Переменные окружения:');
