@@ -1021,6 +1021,7 @@
         let refreshPromise = null;
         let bonusButton, bonusTimer;
         let isUpdatingFromFirebase = false; // Глобальная переменная для предотвращения зацикливания
+        let isProcessingBonus = false; // Флаг для предотвращения множественных нажатий на кнопку бонуса
         let playerRelations = {}; // Хранение связей друзей/врагов
         
 
@@ -1996,6 +1997,9 @@
             bonusButton.disabled = false;
             bonusTimer.textContent = 'Bonus available!';
             localStorage.removeItem('nextBonusTime');
+            
+            // Сбрасываем флаг обработки бонуса
+            isProcessingBonus = false;
         }
 
         // Функция для получения случайного числа в диапазоне
@@ -2106,10 +2110,22 @@
                     bonusButton.addEventListener('click', async () => {
                         console.log('💰 [DEBUG] Bonus button clicked!');
                         
+                        // Проверяем, не обрабатывается ли уже бонус
+                        if (isProcessingBonus) {
+                            console.log('⚠️ [DEBUG] Предотвращено множественное нажатие на кнопку бонуса');
+                            return;
+                        }
+                        
+                        // Сразу блокируем кнопку и устанавливаем флаг
+                        bonusButton.disabled = true;
+                        isProcessingBonus = true;
+                        
                         try {
                             if (!isLoggedIn || !currentUser) {
                                 console.log('❌ [DEBUG] Пользователь не авторизован');
                                 alert('Please login to claim bonus!');
+                                isProcessingBonus = false; // Сбрасываем флаг
+                                bonusButton.disabled = false; // Разблокируем кнопку
                                 return;
                             }
 
@@ -2118,9 +2134,6 @@
                             // Начисляем бонус
                             await updatePlayerScore(currentUser.username, 300);
                             console.log('✅ [DEBUG] Бонус +300 очков начислен!');
-                            
-                            // Отключаем кнопку и запускаем таймер
-                            bonusButton.disabled = true;
                             
                             // Генерируем случайное время ожидания (30-180 секунд)
                             const waitTime = Math.floor(Math.random() * (180 - 30 + 1)) + 30;
@@ -2133,7 +2146,11 @@
                             startBonusTimer(nextBonusTime);
                             addHistoryItem('bonus', `Bonus received: +300`);
                         } catch (error) {
+                            console.log('❌ [DEBUG] Ошибка при начислении бонуса:', error);
                             activateBonus(); // В случае ошибки активируем кнопку
+                        } finally {
+                            // Сбрасываем флаг обработки бонуса
+                            isProcessingBonus = false;
                         }
                     });
                     console.log('✅ [DEBUG] Bonus button event listener добавлен');
