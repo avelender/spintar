@@ -15,9 +15,17 @@ export function validateUsername(username) {
   
   // Разрешаем: буквы (любой алфавит, в т.ч. кириллица/латиница), цифры, подчёркивание, дефис и точка
   // Длина: 2–30 символов
-  // \p{L} — любая буква Юникода, \p{N} — цифра Юникода
-  const validPattern = /^[\p{L}\p{N}_\-.]{2,30}$/u;
-  return validPattern.test(username);
+  // Пытаемся использовать property escapes; при отсутствии поддержки падаем на fallback (ASCII+кириллица)
+  try {
+    const unicodePattern = new RegExp('^[\\p{L}\\p{N}_\\-.]{2,30}$', 'u');
+    return unicodePattern.test(username);
+  } catch (e) {
+    // Fallback: латиница A-Za-z, цифры, подчёркивание/дефис/точка и диапазоны кириллицы
+    // Диапазоны: \u0400-\u04FF (Basic Cyrillic), \u0500-\u052F (Supplement),
+    // \u2DE0-\u2DFF (Cyrillic Extended-A), \uA640-\uA69F (Extended-B)
+    const fallbackPattern = /^[A-Za-z0-9_\-.\u0400-\u04FF\u0500-\u052F\u2DE0-\u2DFF\uA640-\uA69F]{2,30}$/;
+    return fallbackPattern.test(username);
+  }
 }
 
 /**

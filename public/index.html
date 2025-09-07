@@ -1145,6 +1145,18 @@
             console.log('✅ [DEBUG] checkAuthStatus полностью завершен');
         }
 
+        // Локальная валидация ника (для решения несовместимостей рантайма)
+        function clientValidateUsername(name) {
+            try {
+                const re = new RegExp('^[\\p{L}\\p{N}_\\-.]{2,30}$', 'u');
+                return typeof name === 'string' && re.test(name);
+            } catch (e) {
+                // Fallback: латиница/кириллица + цифры + _-.
+                const fallback = /^[A-Za-z0-9_\-.\u0400-\u04FF\u0500-\u052F\u2DE0-\u2DFF\uA640-\uA69F]{2,30}$/;
+                return typeof name === 'string' && fallback.test(name);
+            }
+        }
+
         // Функция для авторизации в Firebase
         async function authenticateWithFirebase() {
             try {
@@ -1158,10 +1170,15 @@
                     console.log('🔐 [DEBUG] Нет имени пользователя, используем гостевой идентификатор');
                 }
                 
-                // Добавляем имя пользователя в URL запроса
+                // Добавляем имя пользователя в URL запроса, только если локально валиден
                 const username = (user && user.username) ? user.username : ('guest_' + Math.random().toString(36).substring(2, 10));
-                const url = `/api/auth/firebase-token?username=${encodeURIComponent(username)}`;
-                console.log(`🔐 [DEBUG] Запрашиваем токен для пользователя: ${username}`);
+                let url = `/api/auth/firebase-token`;
+                if (clientValidateUsername(username)) {
+                    url += `?username=${encodeURIComponent(username)}`;
+                } else {
+                    console.log('🔐 [DEBUG] Локально невалидный ник, отправляем запрос без username');
+                }
+                console.log(`🔐 [DEBUG] Запрашиваем токен для пользователя: ${username} (url: ${url})`);
                 
                 // Получаем Firebase токен с сервера
                 const response = await fetch(url, {
@@ -1171,9 +1188,35 @@
                 console.log('🔐 [DEBUG] Ответ сервера:', response.status, response.statusText);
                 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('❌ [DEBUG] Ошибка ответа сервера:', errorText);
-                    throw new Error(`Ошибка получения Firebase токена: ${response.status}`);
+                    // Попробуем один повтор без username, если первый запрос был с ним
+                    if (url.includes('?username=')) {
+                        console.log('🔁 [DEBUG] Повторный запрос без username из-за ошибки', response.status);
+                        const retry = await fetch('/api/auth/firebase-token', { credentials: 'include' });
+                        if (!retry.ok) {
+                            const errText = await retry.text();
+                            console.error('❌ [DEBUG] Ошибка ответа повторного запроса:', errText);
+                            throw new Error(`Ошибка получения Firebase токена: ${retry.status}`);
+                        }
+                        const retryData = await retry.json();
+                        console.log('🔐 [DEBUG] Повторный ответ JSON:', retryData);
+                        let firebaseToken = retryData.token;
+                        if (!firebaseToken) {
+                            // Фоллбек на cookie, если сервер положил токен туда
+                            const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+                                const [key, value] = cookie.trim().split('=');
+                                acc[key] = value;
+                                return acc;
+                            }, {});
+                            firebaseToken = cookies.firebase_token;
+                        }
+                        if (!firebaseToken) throw new Error('Не найден Firebase токен (повторный запрос)');
+                        await window.firebaseAuth.signInWithCustomToken(firebaseToken);
+                        return true;
+                    } else {
+                        const errorText = await response.text();
+                        console.error('❌ [DEBUG] Ошибка ответа сервера:', errorText);
+                        throw new Error(`Ошибка получения Firebase токена: ${response.status}`);
+                    }
                 }
                 
                 const responseData = await response.json();
