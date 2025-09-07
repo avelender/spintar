@@ -40,10 +40,10 @@ export default async function handler(req, res) {
         }
 
         // Если не удалось получить username из токена, пробуем без параметров
-        // Валидируем username перед отправкой запроса
+        // Логируем невалидные имена, но не блокируем авторизацию
         if (username && !validateUsername(username)) {
             console.log('⚠️ [SECURITY] Невалидное имя пользователя:', username);
-            return res.status(400).json({ error: 'Invalid username format' });
+            // Не блокируем авторизацию, только логируем предупреждение
         }
         
         // Санитизируем username для дополнительной безопасности
@@ -86,7 +86,7 @@ export default async function handler(req, res) {
         // Проверяем полученные данные на безопасность
         if (!validateObjectSafety(profileData)) {
             console.error('⚠️ [SECURITY] Потенциально опасные данные в ответе API');
-            return res.status(400).json({ error: 'Potentially unsafe data detected' });
+            // Не блокируем авторизацию, только логируем предупреждение
         }
         
         // Проверяем структуру ответа API
