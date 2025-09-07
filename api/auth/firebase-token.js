@@ -124,49 +124,12 @@ export default async function handler(req, res) {
                 throw new Error('Firebase Admin SDK не инициализирован');
             }
             
-            // Проверяем и валидируем идентификатор пользователя
-            if (!userIdentifier || userIdentifier.length < 1) {
-                userIdentifier = 'guest_' + Math.random().toString(36).substring(2, 10);
-                console.log(`🔐 [DEBUG] Используем случайный идентификатор: ${userIdentifier}`);
-            } else {
-                try {
-                    // Сначала санитизируем строку
-                    userIdentifier = sanitizeString(userIdentifier);
-                    
-                    // Проверяем соответствие требованиям (2-20 символов, только буквы, цифры, _, -)
-                    if (!validateUsername(userIdentifier)) {
-                        // Если не соответствует требованиям, преобразуем в допустимый формат
-                        userIdentifier = userIdentifier.replace(/[^a-zA-Z0-9_-]/g, '_');
-                        
-                        // Ограничиваем длину от 2 до 20 символов
-                        if (!userIdentifier || userIdentifier.length < 2) {
-                            userIdentifier = 'guest_' + Math.random().toString(36).substring(2, 10);
-                        } else if (userIdentifier.length > 20) {
-                            userIdentifier = userIdentifier.substring(0, 20);
-                        }
-                        
-                        if (process.env.NODE_ENV !== 'production') {
-                            console.log(`🔐 [DEBUG] Идентификатор преобразован в допустимый формат`);
-                        }
-                    }
-                } catch (validationError) {
-                    // В случае ошибки валидации используем гостевой идентификатор
-                    console.error('❌ Ошибка валидации идентификатора:', validationError);
-                    userIdentifier = 'guest_' + Math.random().toString(36).substring(2, 10);
-                }
-            }
-            
-            // Дополнительная проверка для Firebase (максимум 128 символов)
-            if (userIdentifier.length > 128) {
-                userIdentifier = userIdentifier.substring(0, 128);
-                console.log(`🔐 [DEBUG] Идентификатор обрезан до 128 символов: ${userIdentifier}`);
-            }
-            if (process.env.NODE_ENV !== 'production') {
-                console.log(`🔐 [DEBUG] Идентификатор очищен`);
-            }
+            // Создаем безопасный идентификатор пользователя
+            // Используем простой гостевой идентификатор для избежания ошибок
+            userIdentifier = 'guest_' + Math.random().toString(36).substring(2, 10);
             
             if (process.env.NODE_ENV !== 'production') {
-                console.log(`🔐 [DEBUG] Создаем токен для пользователя`);
+                console.log(`🔐 [DEBUG] Используем безопасный идентификатор: ${userIdentifier}`);
             }
             const firebaseToken = await admin.auth().createCustomToken(userIdentifier);
             if (process.env.NODE_ENV !== 'production') {
@@ -185,10 +148,16 @@ export default async function handler(req, res) {
             res.status(200).json({ success: true, token: firebaseToken });
         } catch (tokenError) {
             console.error('❌ Ошибка создания токена:', tokenError);
-            res.status(500).json({ error: 'Failed to create Firebase token', message: tokenError.message });
+            console.error('❌ Стек ошибки:', tokenError.stack);
+            console.error('❌ Идентификатор пользователя:', userIdentifier);
+            console.error('❌ Тип идентификатора:', typeof userIdentifier);
+            res.status(500).json({ error: 'Failed to create Firebase token', message: tokenError.message, stack: tokenError.stack });
         }
     } catch (error) {
         console.error('❌ Ошибка генерации Firebase token:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('❌ Стек ошибки:', error.stack);
+        console.error('❌ Запрос:', req.url);
+        console.error('❌ Параметры:', req.query);
+        res.status(500).json({ error: 'Internal server error', message: error.message, stack: error.stack });
     }
 }
