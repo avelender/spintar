@@ -1,5 +1,4 @@
 // Выход из системы и удаление токенов
-import { getCsrfTokenFromCookie, validateCsrfToken } from '../utils/csrf';
 
 export default function handler(req, res) {
     // Разрешаем только POST запросы
@@ -8,10 +7,18 @@ export default function handler(req, res) {
     }
     
     // Проверяем CSRF-токен
-    const cookieToken = getCsrfTokenFromCookie(req);
+    // Получаем токен из куки
+    const cookies = req.headers.cookie?.split(';').reduce((acc, cookie) => {
+        const [key, value] = cookie.trim().split('=');
+        acc[key] = value;
+        return acc;
+    }, {}) || {};
+    
+    const cookieToken = cookies.csrf_token;
     const requestToken = req.headers['x-csrf-token'];
     
-    if (!validateCsrfToken(requestToken, cookieToken)) {
+    // Простая проверка токена - достаточно для логаута
+    if (!cookieToken || !requestToken || cookieToken !== requestToken) {
         console.error('❌ CSRF validation failed in logout');
         return res.status(403).json({ error: 'CSRF validation failed' });
     }
