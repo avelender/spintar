@@ -1,4 +1,5 @@
-// Получение профиля пользователя через API орбитара
+// API для получения профиля пользователя и CSRF-токена
+import { setCsrfToken } from './utils/csrf';
 
 export default async function handler(req, res) {
     // Разрешаем только GET запросы
@@ -85,12 +86,16 @@ export default async function handler(req, res) {
         const userProfile = profileData.payload.profile;
         console.log('✅ Профиль пользователя получен:', userProfile.username);
 
+        // Генерируем и устанавливаем CSRF-токен
+        const csrfToken = setCsrfToken(req, res);
+        
         // Возвращаем только необходимые данные (без лишней информации)
         res.status(200).json({
             username: userProfile.username,
             displayName: userProfile.display_name || userProfile.username,
             avatar: userProfile.avatar_url || null,
-            id: userProfile.id
+            id: userProfile.id,
+            csrfToken: csrfToken // Добавляем CSRF-токен в ответ
         });
 
     } catch (error) {

@@ -24,7 +24,10 @@
                 
                 // Если в куки нет, запрашиваем с сервера
                 console.log('🔒 Запрашиваем новый CSRF-токен...');
-                const response = await fetch('/api/csrf-token');
+                // Теперь получаем токен через API profile
+                const response = await fetch('/api/profile', {
+                    credentials: 'include'
+                });
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
