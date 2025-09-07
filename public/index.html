@@ -67,25 +67,13 @@
             firebase.initializeApp(firebaseConfig);
             const firebaseDB = firebase.firestore();
             const firebaseAuth = firebase.auth();
-            // Mitigate CORS/WebChannel issues (force long-polling) and avoid overriding host by merging settings
+            // Mitigate CORS/WebChannel issues: force long-polling and disable fetch streams
             try {
-                try {
-                    // Newer SDKs support merge flag
-                    firebaseDB.settings({
-                        experimentalForceLongPolling: true,
-                        experimentalAutoDetectLongPolling: true,
-                        useFetchStreams: false,
-                        ignoreUndefinedProperties: true
-                    }, { merge: true });
-                } catch (_mergeErr) {
-                    // Fallback for SDKs without merge option
-                    firebaseDB.settings({
-                        experimentalForceLongPolling: true,
-                        experimentalAutoDetectLongPolling: true,
-                        useFetchStreams: false,
-                        ignoreUndefinedProperties: true
-                    });
-                }
+                firebaseDB.settings({
+                    experimentalForceLongPolling: true,
+                    useFetchStreams: false,
+                    ignoreUndefinedProperties: true
+                });
             } catch (e) {
                 console.warn('⚠️ Firestore settings not applied:', e?.message || e);
             }
