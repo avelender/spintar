@@ -965,6 +965,7 @@
         let playerScores = {};
         let isSpinning = false;
         let bonusButton, bonusTimer;
+        let isUpdatingFromFirebase = false; // Глобальная переменная для предотвращения зацикливания
         let playerRelations = {}; // Хранение связей друзей/врагов
         
 
@@ -1602,9 +1603,6 @@
         function subscribeToScores() {
             try {
                 const gameDocRef = window.firebaseDoc(window.firebaseDB, 'scores', 'game_data');
-                
-                // Флаг для предотвращения зацикливания
-                let isUpdatingFromFirebase = false;
                 
                 window.firebaseOnSnapshot(gameDocRef, (doc) => {
                     if (doc.exists) {
