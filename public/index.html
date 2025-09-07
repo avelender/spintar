@@ -1002,19 +1002,7 @@
     <script>
         // Firebase references (используем глобальные переменные напрямую)
         
-        // Контроль логирования: в проде гасим console.log, включаем по ?debug=1 или localStorage.debugLogs=1
-        (function() {
-            try {
-                const host = window.location.hostname;
-                const isLocal = ['localhost', '127.0.0.1', '0.0.0.0'].includes(host);
-                const params = new URLSearchParams(window.location.search);
-                const forceDebug = params.get('debug') === '1' || localStorage.getItem('debugLogs') === '1';
-                window.__DEBUG_LOGS__ = isLocal || forceDebug;
-                if (!window.__DEBUG_LOGS__) {
-                    console.log = function(){}; // подавляем шумные логи в проде
-                }
-            } catch (e) { /* noop */ }
-        })();
+        // Debug: логирование включено (подавление отключено по просьбе пользователя)
         
         // Игровые переменные
         let currentUser = null;
