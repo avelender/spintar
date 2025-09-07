@@ -1,4 +1,6 @@
 // Получение профиля пользователя через API орбитара
+import { validateUsername, validateObjectSafety, sanitizeString } from './utils/validation';
+
 export default async function handler(req, res) {
     // Разрешаем только GET запросы
     if (req.method !== 'GET') {
@@ -38,7 +40,15 @@ export default async function handler(req, res) {
         }
 
         // Если не удалось получить username из токена, пробуем без параметров
-        const requestBody = username ? { username } : {};
+        // Валидируем username перед отправкой запроса
+        if (username && !validateUsername(username)) {
+            console.log('⚠️ [SECURITY] Невалидное имя пользователя:', username);
+            return res.status(400).json({ error: 'Invalid username format' });
+        }
+        
+        // Санитизируем username для дополнительной безопасности
+        const sanitizedUsername = username ? sanitizeString(username) : '';
+        const requestBody = sanitizedUsername ? { username: sanitizedUsername } : {};
         console.log('🔍 [DEBUG] Request body for API:', JSON.stringify(requestBody));
 
         console.log('🚀 [DEBUG] Making API request to /api/v1/user/profile');
@@ -73,6 +83,12 @@ export default async function handler(req, res) {
         const profileData = await profileResponse.json();
         console.log('🔍 [DEBUG] Full API response:', JSON.stringify(profileData, null, 2));
         
+        // Проверяем полученные данные на безопасность
+        if (!validateObjectSafety(profileData)) {
+            console.error('⚠️ [SECURITY] Потенциально опасные данные в ответе API');
+            return res.status(400).json({ error: 'Potentially unsafe data detected' });
+        }
+        
         // Проверяем структуру ответа API
         if (!profileData.payload || !profileData.payload.profile) {
             console.error('❌ Некорректный ответ API - отсутствует payload.profile');
@@ -82,11 +98,16 @@ export default async function handler(req, res) {
         const userProfile = profileData.payload.profile;
         console.log('✅ Профиль пользователя получен:', userProfile.username);
 
+        // Валидируем и санитизируем данные перед отправкой клиенту
+        const safeUsername = sanitizeString(userProfile.username);
+        const safeDisplayName = sanitizeString(userProfile.display_name || userProfile.username);
+        const safeAvatar = userProfile.avatar_url ? sanitizeString(userProfile.avatar_url) : null;
+        
         // Возвращаем только необходимые данные (без лишней информации)
         res.status(200).json({
-            username: userProfile.username,
-            displayName: userProfile.display_name || userProfile.username,
-            avatar: userProfile.avatar_url || null,
+            username: safeUsername,
+            displayName: safeDisplayName,
+            avatar: safeAvatar,
             id: userProfile.id
         });
 
