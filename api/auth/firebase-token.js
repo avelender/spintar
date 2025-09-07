@@ -129,22 +129,30 @@ export default async function handler(req, res) {
                 userIdentifier = 'guest_' + Math.random().toString(36).substring(2, 10);
                 console.log(`🔐 [DEBUG] Используем случайный идентификатор: ${userIdentifier}`);
             } else {
-                // Сначала санитизируем строку
-                userIdentifier = sanitizeString(userIdentifier);
-                
-                // Проверяем соответствие требованиям (2-20 символов, только буквы, цифры, _, -)
-                if (!validateUsername(userIdentifier)) {
-                    // Если не соответствует требованиям, преобразуем в допустимый формат
-                    userIdentifier = userIdentifier.replace(/[^a-zA-Z0-9_-]/g, '_');
+                try {
+                    // Сначала санитизируем строку
+                    userIdentifier = sanitizeString(userIdentifier);
                     
-                    // Ограничиваем длину от 2 до 20 символов
-                    if (userIdentifier.length < 2) {
-                        userIdentifier = userIdentifier + '_' + Math.random().toString(36).substring(2, 4);
-                    } else if (userIdentifier.length > 20) {
-                        userIdentifier = userIdentifier.substring(0, 20);
+                    // Проверяем соответствие требованиям (2-20 символов, только буквы, цифры, _, -)
+                    if (!validateUsername(userIdentifier)) {
+                        // Если не соответствует требованиям, преобразуем в допустимый формат
+                        userIdentifier = userIdentifier.replace(/[^a-zA-Z0-9_-]/g, '_');
+                        
+                        // Ограничиваем длину от 2 до 20 символов
+                        if (!userIdentifier || userIdentifier.length < 2) {
+                            userIdentifier = 'guest_' + Math.random().toString(36).substring(2, 10);
+                        } else if (userIdentifier.length > 20) {
+                            userIdentifier = userIdentifier.substring(0, 20);
+                        }
+                        
+                        if (process.env.NODE_ENV !== 'production') {
+                            console.log(`🔐 [DEBUG] Идентификатор преобразован в допустимый формат`);
+                        }
                     }
-                    
-                    console.log(`🔐 [DEBUG] Идентификатор преобразован в допустимый формат: ${userIdentifier}`);
+                } catch (validationError) {
+                    // В случае ошибки валидации используем гостевой идентификатор
+                    console.error('❌ Ошибка валидации идентификатора:', validationError);
+                    userIdentifier = 'guest_' + Math.random().toString(36).substring(2, 10);
                 }
             }
             
