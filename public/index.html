@@ -1808,7 +1808,7 @@
                             const friendBtn = document.createElement('button');
                             friendBtn.className = isFriend ? 'relation-btn active friend' : 'relation-btn friend';
                             friendBtn.dataset.type = 'friend';
-                            friendBtn.dataset.target = escapeHtml(username); // 🔒 ЭКРАНИРУЕМ!
+                            friendBtn.dataset.target = username;
                             friendBtn.title = isFriend ? 'Remove from friends' : 'Add as friend';
                             friendBtn.textContent = '❤️';
                             
@@ -1816,7 +1816,7 @@
                             const enemyBtn = document.createElement('button');
                             enemyBtn.className = isEnemy ? 'relation-btn active enemy' : 'relation-btn enemy';
                             enemyBtn.dataset.type = 'enemy';
-                            enemyBtn.dataset.target = escapeHtml(username); // 🔒 ЭКРАНИРУЕМ!
+                            enemyBtn.dataset.target = username;
                             enemyBtn.title = isEnemy ? 'Remove from enemies' : 'Add as enemy';
                             enemyBtn.textContent = '💩';
                             
