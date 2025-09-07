@@ -46,8 +46,8 @@
             window.firebaseDoc = function(db, collection, docId) {
                 return db.collection(collection).doc(docId);
             };
-            window.firebaseGetDoc = function(db, collection, docId) {
-                return db.collection(collection).doc(docId);
+            window.firebaseGetDoc = function(docRef) {
+                return docRef.get();
             };
             window.firebaseSetDoc = function(docRef, data) {
                 return docRef.set(data);
