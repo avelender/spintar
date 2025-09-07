@@ -1612,21 +1612,19 @@
                         const data = doc.data();
                         console.log(' [SYNC] Получены данные из Firebase:', Object.keys(data.playerScores || {}));
                         
-                        // УМНОЕ СЛИЯНИЕ: Firebase данные имеют приоритет, но сохраняем локальные если они больше
+                        // ИСПОЛЬЗУЕМ ТОЛЬКО ДАННЫЕ ИЗ FIREBASE
                         const firebaseScores = data.playerScores || {};
-                        const mergedScores = { ...playerScores }; // Начинаем с локальных данных
                         
-                        for (const [player, firebaseScore] of Object.entries(firebaseScores)) {
-                            const localScore = playerScores[player] || 0;
-                            // Firebase имеет приоритет, но если локальный счет больше - оставляем его
-                            mergedScores[player] = Math.max(localScore, firebaseScore);
-                            
+                        // Логируем разницу между локальными и Firebase данными для отладки
+                        for (const [player, localScore] of Object.entries(playerScores)) {
+                            const firebaseScore = firebaseScores[player] || 0;
                             if (localScore !== firebaseScore) {
-                                console.log(` [SYNC] ${player}: local=${localScore}, firebase=${firebaseScore}, final=${mergedScores[player]}`);
+                                console.log(` [SYNC] ${player}: local=${localScore}, firebase=${firebaseScore}, используем Firebase`);
                             }
                         }
                         
-                        playerScores = mergedScores;
+                        // Всегда используем данные из Firebase
+                        playerScores = { ...firebaseScores };
                         
                         // Сохраняем игровые данные глобально для использования в других функциях
                         window.gameData = data;
@@ -1755,16 +1753,56 @@
         async function updatePlayerScore(username, points) {
             if (!username) return;
             
-            if (!playerScores[username]) {
-                // Новый игрок получает стартовые 1000 очков
-                playerScores[username] = 1000;
-                console.log('🎉 Новый игрок! Стартовые 1000 очков для:', username);
+            try {
+                // Получаем текущие данные из Firebase
+                const gameDocRef = window.firebaseDoc(window.firebaseDB, 'scores', 'game_data');
+                const docSnap = await window.firebaseGetDoc(gameDocRef);
+                
+                if (!docSnap.exists()) {
+                    console.log('❗ [SCORE] Документ в Firebase не найден, создаем новый');
+                    // Создаем новый документ
+                    playerScores[username] = 1000 + points;
+                    await saveScores();
+                    return;
+                }
+                
+                // Получаем данные из Firebase
+                const data = docSnap.data();
+                const firebaseScores = data.playerScores || {};
+                
+                // Обновляем счет игрока в Firebase
+                if (!firebaseScores[username]) {
+                    // Новый игрок получает стартовые 1000 очков
+                    firebaseScores[username] = 1000;
+                    console.log('🎉 Новый игрок! Стартовые 1000 очков для:', username);
+                }
+                
+                // Обновляем счет
+                firebaseScores[username] += points;
+                console.log(`💰 [SCORE] Обновляем счет ${username}: ${firebaseScores[username] - points} => ${firebaseScores[username]} (${points > 0 ? '+' : ''}${points})`);
+                
+                // Сохраняем обновленные данные в Firebase
+                const gameData = {
+                    ...data,
+                    playerScores: firebaseScores,
+                    lastUpdated: new Date().toISOString()
+                };
+                
+                // Сохраняем в Firebase
+                await window.firebaseSetDoc(gameDocRef, gameData);
+                
+                // Обновляем локальные данные из Firebase
+                playerScores = { ...firebaseScores };
+                
+                // Обновляем интерфейс
+                updateScoreDisplay('firebase');
+                updateAuthUI();
+                
+                console.log('✅ [SCORE] Счет успешно обновлен в Firebase');
+            } catch (error) {
+                console.error('❌ [SCORE] Ошибка обновления счета:', error);
+                showFirebaseError('Ошибка обновления счета. Попробуйте еще раз.');
             }
-            playerScores[username] += points;
-            
-            updateScoreDisplay('firebase');
-            await saveScores(); // ✅ ЖДЕМ сохранения для кросс-устройство синхронизации!
-            updateAuthUI(); // обновляем интерфейс авторизации
         }
 
 
