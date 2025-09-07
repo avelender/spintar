@@ -13,8 +13,10 @@ export function validateUsername(username) {
     return false;
   }
   
-  // Только буквы, цифры, подчеркивания, дефисы, 3-20 символов
-  const validPattern = /^[a-zA-Z0-9_-]{3,20}$/;
+  // Разрешаем: буквы (любой алфавит, в т.ч. кириллица/латиница), цифры, подчёркивание, дефис и точка
+  // Длина: 2–30 символов
+  // \p{L} — любая буква Юникода, \p{N} — цифра Юникода
+  const validPattern = /^[\p{L}\p{N}_\-.]{2,30}$/u;
   return validPattern.test(username);
 }
 

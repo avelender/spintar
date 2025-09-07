@@ -1,5 +1,6 @@
 // Импортируем Firebase Admin SDK
 import admin from 'firebase-admin';
+import { validateUsername } from '../utils/validation';
 
 // Добавляем отладочные логи
 console.log('🔍 [DEBUG] Переменные окружения:');
@@ -100,9 +101,19 @@ export default async function handler(req, res) {
         console.log('🔐 [DEBUG] Получаем имя пользователя');
         
         // Пробуем получить имя пользователя из разных источников
-        let userIdentifier = req.query.username || cookies.username || 'guest_' + Math.random().toString(36).substring(2, 10);
-        
-        console.log(`🔐 [DEBUG] Имя пользователя/идентификатор: ${userIdentifier}`);
+        const queryUsername = req.query.username;
+        const cookieUsername = cookies.username;
+        let userIdentifier = null;
+
+        if (validateUsername(queryUsername)) {
+            userIdentifier = queryUsername;
+        } else if (validateUsername(cookieUsername)) {
+            userIdentifier = cookieUsername;
+        } else {
+            userIdentifier = 'guest_' + Math.random().toString(36).substring(2, 10);
+        }
+
+        console.log(`🔐 [DEBUG] Имя пользователя/идентификатор (валид.): ${userIdentifier}`);
 
         // Создаем кастомный токен Firebase
         try {
@@ -112,21 +123,13 @@ export default async function handler(req, res) {
                 throw new Error('Firebase Admin SDK не инициализирован');
             }
             
-            // Проверяем длину идентификатора пользователя
-            if (!userIdentifier || userIdentifier.length < 1) {
-                userIdentifier = 'guest_' + Math.random().toString(36).substring(2, 10);
-                console.log(`🔐 [DEBUG] Используем случайный идентификатор: ${userIdentifier}`);
-            }
-            
             // Ограничиваем длину идентификатора до 128 символов (ограничение Firebase)
             if (userIdentifier.length > 128) {
                 userIdentifier = userIdentifier.substring(0, 128);
                 console.log(`🔐 [DEBUG] Идентификатор обрезан до 128 символов: ${userIdentifier}`);
             }
             
-            // Удаляем недопустимые символы из идентификатора
-            userIdentifier = userIdentifier.replace(/[^a-zA-Z0-9_-]/g, '_');
-            console.log(`🔐 [DEBUG] Очищенный идентификатор: ${userIdentifier}`);
+            // На этом этапе userIdentifier либо валидное имя (нашими правилами), либо guest_*
             
             console.log(`🔐 [DEBUG] Создаем токен для пользователя: ${userIdentifier}`);
             const firebaseToken = await admin.auth().createCustomToken(userIdentifier);
