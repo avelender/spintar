@@ -67,6 +67,16 @@
             firebase.initializeApp(firebaseConfig);
             const firebaseDB = firebase.firestore();
             const firebaseAuth = firebase.auth();
+            // Mitigate CORS/WebChannel env issues (proxies, ETP, adblockers)
+            try {
+                firebaseDB.settings({
+                    experimentalAutoDetectLongPolling: true,
+                    useFetchStreams: false,
+                    ignoreUndefinedProperties: true
+                });
+            } catch (e) {
+                console.warn('⚠️ Firestore settings not applied:', e?.message || e);
+            }
             
             // Make Firebase available globally
             window.firebaseDB = firebaseDB;
