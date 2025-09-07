@@ -1,4 +1,6 @@
-// API endpoint для получения Firebase конфигурации из environment variables
+// API endpoint для получения Firebase конфигурации и CSRF-токена
+import { setCsrfToken } from './utils/csrf';
+
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
         return res.status(405).json({ error: 'Method not allowed' });
@@ -21,7 +23,11 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'Firebase configuration missing' });
         }
 
-        res.status(200).json({ firebaseConfig });
+        // Генерируем и устанавливаем CSRF-токен
+        const csrfToken = setCsrfToken(req, res);
+        
+        // Возвращаем Firebase конфигурацию и CSRF-токен
+        res.status(200).json({ firebaseConfig, csrfToken });
     } catch (error) {
         console.error('❌ Ошибка получения Firebase config:', error);
         res.status(500).json({ error: 'Internal server error' });

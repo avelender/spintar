@@ -24,8 +24,8 @@
                 
                 // Если в куки нет, запрашиваем с сервера
                 console.log('🔒 Запрашиваем новый CSRF-токен...');
-                // Теперь получаем токен через API profile
-                const response = await fetch('/api/profile', {
+                // Получаем токен через API firebase-config, который не требует авторизации
+                const response = await fetch('/api/firebase-config', {
                     credentials: 'include'
                 });
                 if (!response.ok) {
