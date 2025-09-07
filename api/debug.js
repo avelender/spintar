@@ -1,5 +1,15 @@
 // Debug endpoint для диагностики OAuth2 токенов и API
+// Этот эндпоинт доступен только в режиме разработки
 export default async function handler(req, res) {
+    // Проверяем окружение - в продакшене эндпоинт недоступен
+    if (process.env.NODE_ENV === 'production') {
+        console.log('🔒 [SECURITY] Попытка доступа к debug эндпоинту в продакшене');
+        return res.status(404).json({
+            error: 'Not found',
+            message: 'Debug endpoint is not available in production'
+        });
+    }
+    
     try {
         console.log('🔧 [DEBUG] Starting debug endpoint');
         

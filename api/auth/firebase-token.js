@@ -1,11 +1,15 @@
 // Импортируем Firebase Admin SDK
 import admin from 'firebase-admin';
+// Импортируем функции валидации
+import { validateUsername, sanitizeString } from '../utils/validation';
 
-// Добавляем отладочные логи
-console.log('🔍 [DEBUG] Переменные окружения:');
-console.log('- FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID ? 'есть' : 'отсутствует');
-console.log('- FIREBASE_ADMIN_CLIENT_EMAIL:', process.env.FIREBASE_ADMIN_CLIENT_EMAIL ? 'есть' : 'отсутствует');
-console.log('- FIREBASE_ADMIN_PRIVATE_KEY:', process.env.FIREBASE_ADMIN_PRIVATE_KEY ? 'длина: ' + process.env.FIREBASE_ADMIN_PRIVATE_KEY.length : 'отсутствует');
+// Добавляем отладочные логи только в режиме разработки
+if (process.env.NODE_ENV !== 'production') {
+  console.log('🔍 [DEBUG] Переменные окружения:');
+  console.log('- FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID ? 'есть' : 'отсутствует');
+  console.log('- FIREBASE_ADMIN_CLIENT_EMAIL:', process.env.FIREBASE_ADMIN_CLIENT_EMAIL ? 'есть' : 'отсутствует');
+  console.log('- FIREBASE_ADMIN_PRIVATE_KEY:', process.env.FIREBASE_ADMIN_PRIVATE_KEY ? 'есть' : 'отсутствует');
+}
 
 // Инициализируем Firebase Admin SDK, если еще не инициализирован
 if (!admin.apps.length) {
@@ -20,20 +24,26 @@ if (!admin.apps.length) {
     // Получаем ключ из переменных окружения
     let privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
     
-    console.log('🔍 [DEBUG] Исходный ключ, длина:', privateKey.length);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 [DEBUG] Приватный ключ присутствует');
+    }
     
     // Проверяем формат ключа и исправляем его
     
     // 1. Удаляем кавычки, если они есть
     if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
       privateKey = privateKey.slice(1, -1);
-      console.log('🔍 [DEBUG] Удалили кавычки вокруг ключа');
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🔍 [DEBUG] Удалили кавычки вокруг ключа');
+      }
     }
     
     // 2. Заменяем \n на переносы строк
     if (privateKey.includes('\\n')) {
       privateKey = privateKey.replace(/\\n/g, '\n');
-      console.log('🔍 [DEBUG] Заменили \\\\n на \\n');
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🔍 [DEBUG] Заменили \\n на \n');
+      }
     }
     
     // 3. Проверяем наличие заголовков
@@ -41,12 +51,10 @@ if (!admin.apps.length) {
       console.error('❌ [DEBUG] Приватный ключ не содержит необходимых заголовков');
     }
     
-    console.log('🔍 [DEBUG] Обработанный ключ, длина:', privateKey.length);
-    console.log('🔍 [DEBUG] Количество переносов строк:', (privateKey.match(/\n/g) || []).length);
-    
-    // Проверяем формат ключа после обработки
-    console.log('🔍 [DEBUG] Приватный ключ после обработки, начинается с:', privateKey.substring(0, 20) + '...');
-    console.log('🔍 [DEBUG] Количество переносов строк в ключе:', (privateKey.match(/\n/g) || []).length);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 [DEBUG] Ключ обработан');
+      console.log('🔍 [DEBUG] Количество переносов строк:', (privateKey.match(/\n/g) || []).length);
+    }
     
     // Проверяем, что ключ имеет правильный формат PEM
     if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
@@ -60,11 +68,13 @@ if (!admin.apps.length) {
       privateKey: privateKey
     };
     
-    console.log('🔍 [DEBUG] Инициализируем Firebase Admin SDK с учетными данными:', {
-      projectId: serviceAccount.projectId,
-      clientEmail: serviceAccount.clientEmail,
-      privateKeyLength: serviceAccount.privateKey.length
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 [DEBUG] Инициализируем Firebase Admin SDK с учетными данными:', {
+        projectId: serviceAccount.projectId,
+        clientEmail: serviceAccount.clientEmail?.substring(0, 5) + '...',
+        privateKeyExists: !!serviceAccount.privateKey
+      });
+    }
     
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
@@ -102,7 +112,9 @@ export default async function handler(req, res) {
         // Пробуем получить имя пользователя из разных источников
         let userIdentifier = req.query.username || cookies.username || 'guest_' + Math.random().toString(36).substring(2, 10);
         
-        console.log(`🔐 [DEBUG] Имя пользователя/идентификатор: ${userIdentifier}`);
+        if (process.env.NODE_ENV !== 'production') {
+            console.log(`🔐 [DEBUG] Имя пользователя/идентификатор получен`);
+        }
 
         // Создаем кастомный токен Firebase
         try {
@@ -112,25 +124,46 @@ export default async function handler(req, res) {
                 throw new Error('Firebase Admin SDK не инициализирован');
             }
             
-            // Проверяем длину идентификатора пользователя
+            // Проверяем и валидируем идентификатор пользователя
             if (!userIdentifier || userIdentifier.length < 1) {
                 userIdentifier = 'guest_' + Math.random().toString(36).substring(2, 10);
                 console.log(`🔐 [DEBUG] Используем случайный идентификатор: ${userIdentifier}`);
+            } else {
+                // Сначала санитизируем строку
+                userIdentifier = sanitizeString(userIdentifier);
+                
+                // Проверяем соответствие требованиям (2-20 символов, только буквы, цифры, _, -)
+                if (!validateUsername(userIdentifier)) {
+                    // Если не соответствует требованиям, преобразуем в допустимый формат
+                    userIdentifier = userIdentifier.replace(/[^a-zA-Z0-9_-]/g, '_');
+                    
+                    // Ограничиваем длину от 2 до 20 символов
+                    if (userIdentifier.length < 2) {
+                        userIdentifier = userIdentifier + '_' + Math.random().toString(36).substring(2, 4);
+                    } else if (userIdentifier.length > 20) {
+                        userIdentifier = userIdentifier.substring(0, 20);
+                    }
+                    
+                    console.log(`🔐 [DEBUG] Идентификатор преобразован в допустимый формат: ${userIdentifier}`);
+                }
             }
             
-            // Ограничиваем длину идентификатора до 128 символов (ограничение Firebase)
+            // Дополнительная проверка для Firebase (максимум 128 символов)
             if (userIdentifier.length > 128) {
                 userIdentifier = userIdentifier.substring(0, 128);
                 console.log(`🔐 [DEBUG] Идентификатор обрезан до 128 символов: ${userIdentifier}`);
             }
+            if (process.env.NODE_ENV !== 'production') {
+                console.log(`🔐 [DEBUG] Идентификатор очищен`);
+            }
             
-            // Удаляем недопустимые символы из идентификатора
-            userIdentifier = userIdentifier.replace(/[^a-zA-Z0-9_-]/g, '_');
-            console.log(`🔐 [DEBUG] Очищенный идентификатор: ${userIdentifier}`);
-            
-            console.log(`🔐 [DEBUG] Создаем токен для пользователя: ${userIdentifier}`);
+            if (process.env.NODE_ENV !== 'production') {
+                console.log(`🔐 [DEBUG] Создаем токен для пользователя`);
+            }
             const firebaseToken = await admin.auth().createCustomToken(userIdentifier);
-            console.log(`✅ Создан Firebase токен длиной: ${firebaseToken.length}`);
+            if (process.env.NODE_ENV !== 'production') {
+                console.log(`✅ Создан Firebase токен`);
+            }
 
             // Проверяем окружение для добавления флага Secure
             const isProduction = process.env.NODE_ENV === 'production';

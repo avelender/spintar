@@ -16,9 +16,12 @@ export default async function handler(req, res) {
         }, {}) || {};
 
         const accessToken = cookies.access_token;
-        console.log('🔍 [DEBUG] Access token exists:', !!accessToken);
-        console.log('🔍 [DEBUG] Access token length:', accessToken?.length);
-        console.log('🔍 [DEBUG] Token first 50 chars:', accessToken?.substring(0, 50));
+        // Минимизируем логирование чувствительных данных
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('🔍 [DEBUG] Access token exists:', !!accessToken);
+            console.log('🔍 [DEBUG] Access token length:', accessToken?.length);
+            // Не логируем сам токен, даже частично
+        }
 
         if (!accessToken) {
             console.log('❌ [DEBUG] No access token found in cookies');

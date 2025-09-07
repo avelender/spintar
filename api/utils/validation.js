@@ -13,8 +13,8 @@ export function validateUsername(username) {
     return false;
   }
   
-  // Только буквы, цифры, подчеркивания, дефисы, 3-20 символов
-  const validPattern = /^[a-zA-Z0-9_-]{3,20}$/;
+  // Только буквы, цифры, подчеркивания, дефисы, 2-20 символов
+  const validPattern = /^[a-zA-Z0-9_-]{2,20}$/;
   return validPattern.test(username);
 }
 
