@@ -42,7 +42,6 @@ export default function handler(req, res) {
         // Формируем URL для авторизации на орбитаре (строго по документации)
         const authUrl = `https://orbitar.space/oauth2/authorize?` +
             `client_id=${encodeURIComponent(clientId)}&` +
-            `response_type=code&` +
             `scope=${encodeURIComponent('user:profile')}&` +
             `redirect_uri=${encodeURIComponent(redirectUri)}&` +
             `state=${encodeURIComponent(state)}`;

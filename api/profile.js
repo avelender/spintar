@@ -1,5 +1,5 @@
 // API для получения профиля пользователя и CSRF-токена
-import { setCsrfToken } from './utils/csrf';
+import crypto from 'crypto';
 
 export default async function handler(req, res) {
     // Разрешаем только GET запросы
@@ -86,8 +86,13 @@ export default async function handler(req, res) {
         const userProfile = profileData.payload.profile;
         console.log('✅ Профиль пользователя получен:', userProfile.username);
 
-        // Централизованно устанавливаем CSRF-токен
-        const csrfToken = setCsrfToken(req, res);
+        // Генерируем CSRF-токен
+        const csrfToken = crypto.randomBytes(32).toString('hex');
+        
+        // Устанавливаем токен в куки
+        const isProduction = process.env.NODE_ENV === 'production';
+        const cookieString = `csrf_token=${csrfToken}; HttpOnly; SameSite=Strict; Path=/; Max-Age=86400${isProduction ? '; Secure' : ''}`;
+        res.setHeader('Set-Cookie', [cookieString]);
         
         // Возвращаем только необходимые данные (без лишней информации)
         res.status(200).json({
