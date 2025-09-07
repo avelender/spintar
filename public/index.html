@@ -1293,6 +1293,23 @@
                 }
 
                 if (action === 'add') {
+                    // Проверяем, есть ли уже друг/враг с другим именем
+                    const currentRelation = window.gameData.playerRelations[username][type];
+                    if (currentRelation && currentRelation !== target) {
+                        console.log(`⚠️ У пользователя ${username} уже есть ${type === 'friend' ? 'друг' : 'враг'}: ${currentRelation}. Заменяем на ${target}.`);
+                        
+                        // Удаляем старую связь из индекса
+                        if (window.gameData.relationIndex[currentRelation] && 
+                            window.gameData.relationIndex[currentRelation][`${type}edBy`]) {
+                            window.gameData.relationIndex[currentRelation][`${type}edBy`] = 
+                                window.gameData.relationIndex[currentRelation][`${type}edBy`].filter(u => u !== username);
+                            if (window.gameData.relationIndex[currentRelation][`${type}edBy`].length === 0) {
+                                delete window.gameData.relationIndex[currentRelation][`${type}edBy`];
+                            }
+                        }
+                    }
+                    
+                    // Устанавливаем новую связь
                     window.gameData.playerRelations[username][type] = target;
                     // Разрешаем иметь одновременно и друга, и врага
                     // Убрано автоматическое удаление противоположного отношения
@@ -2565,13 +2582,23 @@
                 
                 // Обновляем локальное состояние только после успешного API вызова
                 if (action === 'add') {
+                    // Проверяем, есть ли уже друг/враг с другим именем
+                    const currentRelation = playerRelations[type];
+                    if (currentRelation && currentRelation !== target) {
+                        console.log(`⚠️ У тебя уже был ${type === 'friend' ? 'друг' : 'враг'}: ${currentRelation}. Заменяем на ${target}.`);
+                        
+                        // Добавляем запись в историю
+                        addHistoryItem('info', `Changed ${type === 'friend' ? 'friend' : 'enemy'} from ${currentRelation} to ${target}`);
+                    }
+                    
+                    // Устанавливаем новую связь
                     playerRelations[type] = target;
                     // Разрешаем иметь одновременно и друга, и врага
                     // Убрано автоматическое обнуление противоположного отношения
-                    console.log(`➕ Добавили ${target} в ${type === 'friend' ? 'друзья' : 'враги'} (сохранено в Firebase)`);
+                    console.log(`➞ Добавили ${target} в ${type === 'friend' ? 'друзья' : 'враги'} (сохранено в Firebase)`);
                 } else {
                     playerRelations[type] = null;
-                    console.log(`➖ Убрали ${target} из ${type === 'friend' ? 'друзей' : 'врагов'} (удалено из Firebase)`);
+                    console.log(`➡ Убрали ${target} из ${type === 'friend' ? 'друзей' : 'врагов'} (удалено из Firebase)`);
                 }
                 
                 // Перезагружаем данные tooltip после изменения отношений
