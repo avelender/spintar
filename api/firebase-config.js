@@ -1,10 +1,5 @@
 // API endpoint для получения Firebase конфигурации и CSRF-токена
-import crypto from 'crypto';
-
-// Простая функция генерации CSRF-токена
-function generateCsrfToken() {
-    return crypto.randomBytes(32).toString('hex');
-}
+import { setCsrfToken } from './utils/csrf';
 
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
@@ -28,14 +23,9 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'Firebase configuration missing' });
         }
 
-        // Генерируем CSRF-токен
-        const csrfToken = generateCsrfToken();
-        
-        // Устанавливаем токен в куки
-        const isProduction = process.env.NODE_ENV === 'production';
-        const cookieString = `csrf_token=${csrfToken}; HttpOnly; SameSite=Strict; Path=/; Max-Age=86400${isProduction ? '; Secure' : ''}`;
-        res.setHeader('Set-Cookie', [cookieString]);
-        
+        // Централизовано устанавливаем CSRF-токен и получаем его значение
+        const csrfToken = setCsrfToken(req, res);
+
         // Возвращаем Firebase конфигурацию и CSRF-токен
         res.status(200).json({ firebaseConfig, csrfToken });
     } catch (error) {
