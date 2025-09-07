@@ -226,8 +226,6 @@
 
         .controls{margin:20px 0;display:flex;gap:10px;justify-content:center;align-items:flex-start}.bonus-group{display:flex;flex-direction:column;align-items:center}.bonus-timer{font-size:14px;color:#666;margin-top:5px;text-align:center}.spin-button,.bonus-button{padding:10px 20px;font-size:16px;border:none;border-radius:5px;cursor:pointer;transition:background-color 0.3s,transform 0.1s;background-color:var(--button-bg);color:white}.spin-button:hover,.bonus-button:hover{background-color:var(--button-hover)}.spin-button:disabled,.bonus-button:disabled{background-color:var(--button-disabled)}.spin-button:active,.bonus-button:active{transform:scale(0.98)}
 
-        .score{font-size:24px;margin:20px 0;color:var(--score-label-color)}.score-value{color:var(--accent-color)}
-
         .scores-table {
             background: var(--container-bg);
             padding: 15px;
@@ -1003,6 +1001,20 @@
 
     <script>
         // Firebase references (используем глобальные переменные напрямую)
+        
+        // Контроль логирования: в проде гасим console.log, включаем по ?debug=1 или localStorage.debugLogs=1
+        (function() {
+            try {
+                const host = window.location.hostname;
+                const isLocal = ['localhost', '127.0.0.1', '0.0.0.0'].includes(host);
+                const params = new URLSearchParams(window.location.search);
+                const forceDebug = params.get('debug') === '1' || localStorage.getItem('debugLogs') === '1';
+                window.__DEBUG_LOGS__ = isLocal || forceDebug;
+                if (!window.__DEBUG_LOGS__) {
+                    console.log = function(){}; // подавляем шумные логи в проде
+                }
+            } catch (e) { /* noop */ }
+        })();
         
         // Игровые переменные
         let currentUser = null;
@@ -2223,29 +2235,6 @@
         };
 
         let emojis = Object.keys(emojiPrices);
-        let score = 0;
-
-        // Создаем прайс-лист
-        function createPriceList() {
-            const priceItems = document.querySelector('.price-items');
-            const sortedEmojis = [...emojis].sort((a, b) => emojiPrices[b] - emojiPrices[a]);
-            
-            sortedEmojis.forEach(emoji => {
-                const item = document.createElement('div');
-                item.className = 'price-item';
-                // 🔒 БЕЗОПАСНОЕ создание элементов без innerHTML
-                const emojiSpan = createSafeElement('span', 'emoji', emoji);
-                const pointsSpan = createSafeElement('span', 'points', `${emojiPrices[emoji]} points`);
-                item.appendChild(emojiSpan);
-                item.appendChild(pointsSpan);
-                priceItems.appendChild(item);
-            });
-        }
-
-        function updateScore(points) {
-            score += points;
-            document.querySelector('.score-value').textContent = score;
-        }
 
         function getRandomEmoji() {
             return emojis[Math.floor(Math.random() * emojis.length)];
@@ -2554,42 +2543,40 @@
             }
         }
 
+        // Помощник: применяет иконку/текст на всех переключателях темы
+        function applyThemeUI() {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            const switches = document.querySelectorAll('.theme-switch');
+            switches.forEach(sw => {
+                const icon = sw.querySelector('.theme-icon');
+                const text = sw.querySelector('.theme-text');
+                if (icon) icon.textContent = isDark ? '🌙' : '☀️';
+                if (text) text.textContent = isDark ? 'Dark' : 'Light';
+            });
+        }
+
         // Функция переключения темы
         function toggleTheme() {
             const body = document.body;
-            // Определяем новый режим темы
             const isDark = body.getAttribute('data-theme') === 'dark';
             if (isDark) {
                 body.removeAttribute('data-theme');
             } else {
                 body.setAttribute('data-theme', 'dark');
             }
-            // Обновляем все переключатели темы в интерфейсе
-            const switches = document.querySelectorAll('.theme-switch');
-            switches.forEach(sw => {
-                const icon = sw.querySelector('.theme-icon');
-                const text = sw.querySelector('.theme-text');
-                if (body.getAttribute('data-theme') === 'dark') {
-                    if (icon) icon.textContent = '🌙';
-                    if (text) text.textContent = 'Dark';
-                } else {
-                    if (icon) icon.textContent = '☀️';
-                    if (text) text.textContent = 'Light';
-                }
-            });
+            applyThemeUI();
             // Сохраняем выбор темы
-            localStorage.setItem('theme', body.getAttribute('data-theme') || 'light');
+            localStorage.setItem('theme', document.body.getAttribute('data-theme') || 'light');
         }
 
         // Загружаем сохраненную тему при старте
         const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            if (savedTheme === 'dark') {
-                document.body.setAttribute('data-theme', 'dark');
-                document.querySelector('.theme-icon').textContent = '🌙';
-                document.querySelector('.theme-text').textContent = 'Dark';
-            }
+        if (savedTheme === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+        } else {
+            document.body.removeAttribute('data-theme');
         }
+        applyThemeUI();
 
         // Обработчик кликов по кнопкам друзей/врагов
         async function handleRelationButtonClick(event) {
