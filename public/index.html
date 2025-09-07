@@ -206,7 +206,7 @@
 
         .price-list{width:100%;max-width:100%;background:var(--container-bg);padding:10px;border-radius:8px;box-shadow:0 2px 5px var(--shadow-color);height:fit-content}.price-categories{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}.price-category{flex:1;min-width:120px;text-align:center;padding:6px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-color)}.price-category h4{margin:0 0 5px 0;font-size:13px;color:var(--accent-color)}.price-category-title{font-size:14px;color:var(--title-color);margin-bottom:8px;font-weight:bold}.price-items{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}.price-item{display:inline-flex;align-items:center;gap:3px;font-size:13px;background:var(--bg-color);padding:4px 7px;border-radius:4px;border:1px solid var(--border-color)}.price-item span{margin-right:5px}.price-item .points{color:#28a745;font-size:14px}
 
-        .scores-table{flex:0 0 220px;min-height:300px}
+        .scores-table{flex:0 0 220px;min-height:333px}
 
         /* Стили для анимации */
         @keyframes spin {
@@ -228,6 +228,15 @@
             border-radius: 10px;
             box-shadow: 0 2px 5px var(--shadow-color);
             color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .leaderboard-container {
+            flex: 1;
+            overflow-y: auto;
+            max-height: calc(100% - 40px);
+            padding-right: 5px;
         }
 
         .scores-table h2 {
@@ -369,22 +378,26 @@
             display: block;
         }
 
-        /* Стилизация скроллбара для истории */
-        .history-list::-webkit-scrollbar {
+        /* Стилизация скроллбара для истории и рейтинга */
+        .history-list::-webkit-scrollbar,
+        .leaderboard-container::-webkit-scrollbar {
             width: 8px;
         }
 
-        .history-list::-webkit-scrollbar-track {
+        .history-list::-webkit-scrollbar-track,
+        .leaderboard-container::-webkit-scrollbar-track {
             background: rgba(0, 0, 0, 0.2);
             border-radius: 4px;
         }
 
-        .history-list::-webkit-scrollbar-thumb {
+        .history-list::-webkit-scrollbar-thumb,
+        .leaderboard-container::-webkit-scrollbar-thumb {
             background: #95a5a6;
             border-radius: 4px;
         }
 
-        .history-list::-webkit-scrollbar-thumb:hover {
+        .history-list::-webkit-scrollbar-thumb:hover,
+        .leaderboard-container::-webkit-scrollbar-thumb:hover {
             background: #7f8c8d;
         }
 
@@ -427,7 +440,7 @@
             align-items: center;
             justify-content: flex-start;
             padding: 0 6px;
-            margin: 0;
+            margin: 0 0 4px 0;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 3px;
             font-size: 13px;
@@ -726,7 +739,7 @@
             }
             
             .history-container, .scores-table {
-                min-height: 300px;
+                min-height: 333px;
             }
             
             .price-categories {
@@ -979,8 +992,10 @@
         <!-- Правая колонка: Highscores -->
         <div class="scores-table">
             <h2>🏆 Highscores</h2>
-            <div id="leaderboard">
-                <div class="no-scores">No players yet</div>
+            <div class="leaderboard-container">
+                <div id="leaderboard">
+                    <div class="no-scores">No players yet</div>
+                </div>
             </div>
         </div>
     </div>
@@ -1733,8 +1748,8 @@
             
             // Сортируем игроков по очкам
             const sortedPlayers = Object.entries(playerScores)
-                .sort(([,a], [,b]) => b - a)
-                .slice(0, 10); // Топ 10
+                .sort(([,a], [,b]) => b - a);
+            // Убрали ограничение на 10 игроков
             
             if (sortedPlayers.length === 0) {
                 leaderboard.innerHTML = '<div class="no-scores">No players yet</div>';
