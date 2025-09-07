@@ -1758,7 +1758,7 @@
                 const gameDocRef = window.firebaseDoc(window.firebaseDB, 'scores', 'game_data');
                 const docSnap = await window.firebaseGetDoc(gameDocRef);
                 
-                if (!docSnap.exists()) {
+                if (!docSnap.exists) {
                     console.log('❗ [SCORE] Документ в Firebase не найден, создаем новый');
                     // Создаем новый документ
                     playerScores[username] = 1000 + points;
