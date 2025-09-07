@@ -1511,6 +1511,12 @@
 
         // Сохраняем данные в Firebase Firestore
         async function saveScores() {
+            // Проверяем, не идет ли сейчас обновление из Firebase
+            if (isUpdatingFromFirebase) {
+                console.log('⚠️ [SAVE] Пропускаем сохранение, так как идет обновление из Firebase');
+                return false;
+            }
+            
             try {
                 // Проверяем статус авторизации в Firebase
                 const currentFirebaseUser = window.firebaseAuth.currentUser;
@@ -1597,8 +1603,14 @@
             try {
                 const gameDocRef = window.firebaseDoc(window.firebaseDB, 'scores', 'game_data');
                 
+                // Флаг для предотвращения зацикливания
+                let isUpdatingFromFirebase = false;
+                
                 window.firebaseOnSnapshot(gameDocRef, (doc) => {
                     if (doc.exists) {
+                        // Устанавливаем флаг, что обновляемся из Firebase
+                        isUpdatingFromFirebase = true;
+                        
                         const data = doc.data();
                         console.log(' [SYNC] Получены данные из Firebase:', Object.keys(data.playerScores || {}));
                         
@@ -1622,6 +1634,11 @@
                         window.gameData = data;
                         
                         updateScoreDisplay('firebase');
+                        
+                        // Снимаем флаг после завершения обновления
+                        setTimeout(() => {
+                            isUpdatingFromFirebase = false;
+                        }, 500);
                     } else {
                         console.log(' [SYNC] Документ не найден, создаем начальные данные...');
                         // Если документа нет, сохраняем текущие локальные данные
