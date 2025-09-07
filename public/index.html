@@ -465,6 +465,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            cursor: help;
         }
 
         .leaderboard-item .score {
@@ -1872,6 +1873,8 @@
                     
                     // Username - БЕЗОПАСНО через textContent
                     const usernameSpan = createSafeElement('span', 'username', username);
+                    // Показываем полный ник при наведении
+                    usernameSpan.setAttribute('title', username);
                     item.appendChild(usernameSpan);
                     
                     // Score
