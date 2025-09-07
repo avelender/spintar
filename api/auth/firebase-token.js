@@ -17,38 +17,31 @@ if (!admin.apps.length) {
     
     // Преобразуем приватный ключ - специальный код для Vercel
     // В Vercel переменные окружения с переносами строк сохраняются как \n
-    // Используем жестко заданный ключ для отладки
-    const privateKey = `-----BEGIN PRIVATE KEY-----
-MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCpBSXIbffSJB/q
-/C9Ol9YdfxXc3U+uCO6LHe3ZwBNFAsVX0mdfQZuI6K9ik5C7O2Snau2NTONZCZIr
-BzqO/kbwSxip1OTstJnIV+6Z8kE3K3QQTcPLaf4ed44wAFM6DCcLQEGMbG/85ovv
-+ye5BEuQEs9FV8BpwtKKcplM2S4apnTdzXZGaDcoZGjRwu5wNUZg02k//Hz8lsvo
-/wmMpOoFEPS/qXOwapV2ky8hAKjYJv+hoN+De0D3HhYptixAHQEM29oCYC+w5PqP
-3ILdLInKcyb24bYYqbgkHbWFa7SjtwATzlMm0SYAYr7bMlnMbJkb9wjO6qvLzub2
-Yrk/iCE9AgMBAAECggEAHtMBgPwNJhXQfFphhkPKmLaEljMGRQb7+gMLTZrp6LwI
-oWuNzqF4bA+DbMbcrki2opGtoQdUrvg/3/kBhPJ6nXgUl2RsG38UTKU8rnavzg/u
-qsqD2qUJ4ySKmdZ1VzDALh0Z1zIvej/RZYK4S9Wssim8AzltrdwJ6ZXcv1ccQV+u
-L9qt2QxMPpcSJtWeeU/udtVXIEF302wjaL7NCPdhDj+p/ZW6Xg2qWeD/bLMD/HEW
-Dr60WknSOLtgyGrBKkOjTEqoYab+W9r3hP+jMfqtwzDWVNCRrn6Gt4yIAzIz3ODi
-9GtcKN20DmBZ7ythnIeHgjGyETo8BTP3dNpQsv48AQKBgQDSn4DwVTRshcbRW2eV
-rJsHcEwq7m3kN3ep4xrvS2kF5ntmHmGCFfnOemMT+Q9lQJPuV8t+Ug8QZRqvbndW
-OmmsThpB7uHOxVtPVOBiLTiIIWZNDeF5s54sJFM+Id02wKSFlmC0oT/FAjJaPHUG
-9kilH3OcD0wIICR+v8twdWQBDQKBgQDNbx2fOPPvaf+W0mC3X5ErQrIgCm7lFpms
-tq3U3LoiXv9GuJdH4jyBmOdA5x58fhsRSsJ27vok3R3trPKM6zWcXy+AgjNTflus
-mhpz7gc0FV/so0jAA162XUeQEcYzijXH09Nj1C23x/KHPlNpSRffN0Lnt3lX8euX
-qQQlNL608QKBgQCUz91p8Ml5Y4t1n/8v4SQnvVAThSJffFEv1yXQrJcndBD7tbtv
-DdfR6ubV1cLq5xWd8Kn2NkQucUDJcmMeqWbANu6WZxFj5kz9YBqpQwoOJIsDJiuI
-sT+wMHogDA0gAjw7pmPtO4Cy0TqCRvToVlo9UFt+h9BQbWVbqGc0rbxagQKBgD6u
-FH+sROFbmhxOfCv3ALgOVYLpLATB7ImCA2/bGP+7tG/DioToRkXUfVqUKf0aDPAt
-uz/GkpQE00jdZ/QPIABiGoA/OaHT/+yd6ExO5+vASdBN0bikTpWdyGPwyGSZWudp
-fioLZxeX7ivNnG2XW61DkypYFLH8okFX1Gf1u+pBAoGBALhGUsvDJobgTmZWUMaK
-yd/TDOb8JWYNRYlf4mhYmbTw9T6Uk9u6BaKNnXsBU2o+tE5mW+MIfK9YKTxa4qjP
-HI1f5G8CtYf7wPJvMffgAHX2oLzPn7OV/Xm1WJNoW1n4B5s2v+BNuqFVGrdd/1yJ
-wHHyCyPu7RTCSULi1O9tkOrw
------END PRIVATE KEY-----`;
+    // Получаем ключ из переменных окружения
+    let privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
     
-    console.log('🔍 [DEBUG] Используем встроенный ключ для отладки');
-    console.log('🔍 [DEBUG] Длина ключа:', privateKey.length);
+    console.log('🔍 [DEBUG] Исходный ключ, длина:', privateKey.length);
+    
+    // Проверяем формат ключа и исправляем его
+    
+    // 1. Удаляем кавычки, если они есть
+    if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+      privateKey = privateKey.slice(1, -1);
+      console.log('🔍 [DEBUG] Удалили кавычки вокруг ключа');
+    }
+    
+    // 2. Заменяем \n на переносы строк
+    if (privateKey.includes('\\n')) {
+      privateKey = privateKey.replace(/\\n/g, '\n');
+      console.log('🔍 [DEBUG] Заменили \\\\n на \\n');
+    }
+    
+    // 3. Проверяем наличие заголовков
+    if (!privateKey.includes('BEGIN PRIVATE KEY') || !privateKey.includes('END PRIVATE KEY')) {
+      console.error('❌ [DEBUG] Приватный ключ не содержит необходимых заголовков');
+    }
+    
+    console.log('🔍 [DEBUG] Обработанный ключ, длина:', privateKey.length);
     console.log('🔍 [DEBUG] Количество переносов строк:', (privateKey.match(/\n/g) || []).length);
     
     // Проверяем формат ключа после обработки
