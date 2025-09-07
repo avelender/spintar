@@ -108,6 +108,7 @@
             --loss-color: #c0392b;
             --bonus-color: #d4a017;
             --score-label-color: #6b4423;
+            --border-color: #d9c7b6;
         }
 
         [data-theme="dark"] {
@@ -121,6 +122,7 @@
             --button-hover: #c0392b;
             --button-disabled: #bdc3c7;
             --score-label-color: #fff;
+            --border-color: #56677a;
         }
 
         .theme-switch {
@@ -422,19 +424,7 @@
             gap: 10px;
         }
 
-        .theme-switch {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            background: var(--border-color);
-            color: var(--text-color);
-            font-size: 12px;
-            font-weight: 500;
-            transition: background 0.3s ease;
-        }
+        /* duplicate .theme-switch definition removed to avoid conflicts; base styles defined earlier */
 
         .leaderboard-item {
             display: flex;
@@ -1157,7 +1147,7 @@
                 console.log('🔐 [DEBUG] Получаем Firebase токен с сервера...');
                 
                 // Получаем текущего пользователя из глобальной переменной
-                const user = window.currentUser || {};
+                const user = currentUser || null;
                 
                 // Проверяем, есть ли имя пользователя
                 if (!user || !user.username) {
@@ -1165,7 +1155,7 @@
                 }
                 
                 // Добавляем имя пользователя в URL запроса
-                const username = user?.username || 'guest_' + Math.random().toString(36).substring(2, 10);
+                const username = (user && user.username) ? user.username : ('guest_' + Math.random().toString(36).substring(2, 10));
                 const url = `/api/auth/firebase-token?username=${encodeURIComponent(username)}`;
                 console.log(`🔐 [DEBUG] Запрашиваем токен для пользователя: ${username}`);
                 
@@ -1211,8 +1201,8 @@
                 console.log('🔐 [DEBUG] Firebase токен найден, длина:', firebaseToken.length);
                 
                 // Проверяем текущий статус авторизации в Firebase
-                const currentUser = window.firebaseAuth.currentUser;
-                console.log('🔐 [DEBUG] Текущий пользователь Firebase:', currentUser);
+                const currentFirebaseUser = window.firebaseAuth.currentUser;
+                console.log('🔐 [DEBUG] Текущий пользователь Firebase:', currentFirebaseUser);
                 
                 // Авторизуемся в Firebase
                 console.log('🔐 [DEBUG] Пытаемся авторизоваться в Firebase...');
@@ -2563,20 +2553,26 @@
         // Функция переключения темы
         function toggleTheme() {
             const body = document.body;
-            const themeSwitch = document.querySelector('.theme-switch');
-            const themeIcon = themeSwitch.querySelector('.theme-icon');
-            const themeText = themeSwitch.querySelector('.theme-text');
-            
-            if (body.getAttribute('data-theme') === 'dark') {
+            // Определяем новый режим темы
+            const isDark = body.getAttribute('data-theme') === 'dark';
+            if (isDark) {
                 body.removeAttribute('data-theme');
-                themeIcon.textContent = '☀️';
-                themeText.textContent = 'Light';
             } else {
                 body.setAttribute('data-theme', 'dark');
-                themeIcon.textContent = '🌙';
-                themeText.textContent = 'Dark';
             }
-            
+            // Обновляем все переключатели темы в интерфейсе
+            const switches = document.querySelectorAll('.theme-switch');
+            switches.forEach(sw => {
+                const icon = sw.querySelector('.theme-icon');
+                const text = sw.querySelector('.theme-text');
+                if (body.getAttribute('data-theme') === 'dark') {
+                    if (icon) icon.textContent = '🌙';
+                    if (text) text.textContent = 'Dark';
+                } else {
+                    if (icon) icon.textContent = '☀️';
+                    if (text) text.textContent = 'Light';
+                }
+            });
             // Сохраняем выбор темы
             localStorage.setItem('theme', body.getAttribute('data-theme') || 'light');
         }
