@@ -2317,9 +2317,16 @@
             console.log('🎰 [DEBUG] Spin clicked, isSpinning:', isSpinning);
             if (isSpinning) return;
 
+            // СРАЗУ ставим флаг и блокируем кнопку, чтобы предотвратить двойные клики
+            isSpinning = true;
+            const button = document.querySelector('.spin-button');
+            if (button) button.disabled = true;
+
             // Проверяем авторизацию пользователя
             if (!isLoggedIn || !currentUser) {
                 alert('Please login through Orbitar to play!');
+                if (button) button.disabled = false;
+                isSpinning = false;
                 return;
             }
             
@@ -2332,6 +2339,8 @@
             // Проверяем, достаточно ли очков для спина (100 очков)
             if (currentScore < 100) {
                 alert(`Недостаточно очков для спина! У вас ${currentScore} очков, нужно минимум 100.`);
+                if (button) button.disabled = false;
+                isSpinning = false;
                 return;
             }
 
@@ -2339,7 +2348,6 @@
             await updatePlayerScore(username, -100);
 
             // СРАЗУ запускаем анимацию для мгновенного отклика
-            isSpinning = true;
             clearWinLines();
             
             // Обновляем отображение (saveScores уже вызван в updatePlayerScore с await)
@@ -2348,8 +2356,6 @@
             // Создаем новые символы для каждого барабана
             const newReelContents = Array(3).fill(null).map(() => createReelContent());
             const reelStrips = document.querySelectorAll('.reel-strip');
-            const button = document.querySelector('.spin-button');
-            if (button) button.disabled = true;
             
             reelStrips.forEach((strip, index) => {
                 // Очищаем и добавляем новые символы
