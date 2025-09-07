@@ -1,8 +1,19 @@
-// Выход пользователя - очистка токенов авторизации
+// Выход из системы и удаление токенов
+import { getCsrfTokenFromCookie, validateCsrfToken } from '../utils/csrf';
+
 export default function handler(req, res) {
-    // Разрешаем POST и GET запросы
-    if (req.method !== 'POST' && req.method !== 'GET') {
+    // Разрешаем только POST запросы
+    if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
+    }
+    
+    // Проверяем CSRF-токен
+    const cookieToken = getCsrfTokenFromCookie(req);
+    const requestToken = req.headers['x-csrf-token'];
+    
+    if (!validateCsrfToken(requestToken, cookieToken)) {
+        console.error('❌ CSRF validation failed in logout');
+        return res.status(403).json({ error: 'CSRF validation failed' });
     }
 
     try {

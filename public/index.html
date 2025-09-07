@@ -11,6 +11,33 @@
     <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-auth-compat.js"></script>
     
     <script>
+        // Функция для получения CSRF-токена
+        async function getCsrfToken() {
+            try {
+                // Сначала пробуем получить из куки
+                const csrfCookie = document.cookie.split('; ')
+                    .find(row => row.startsWith('csrf_token='));
+                
+                if (csrfCookie) {
+                    return csrfCookie.split('=')[1];
+                }
+                
+                // Если в куки нет, запрашиваем с сервера
+                console.log('🔒 Запрашиваем новый CSRF-токен...');
+                const response = await fetch('/api/csrf-token');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('✅ CSRF-токен получен');
+                return data.csrfToken;
+            } catch (error) {
+                console.error('❌ Ошибка при получении CSRF-токена:', error);
+                return null;
+            }
+        }
+        
         // Функция для безопасной загрузки Firebase конфигурации с сервера
         async function loadFirebaseConfig() {
             try {
@@ -983,9 +1010,16 @@
 
         async function logout() {
             try {
+                // Получаем CSRF-токен
+                const csrfToken = await getCsrfToken();
+                
                 const response = await fetch('/api/auth/logout', {
                     method: 'POST',
-                    credentials: 'include'
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
+                    }
                 });
 
                 if (response.ok) {
@@ -1025,10 +1059,17 @@
                 } else if (response.status === 401) {
                     console.log('🔍 [DEBUG] 401 - токен истек, пытаемся обновить...');
                     
+                    // Получаем CSRF-токен для запроса
+                    const csrfToken = await getCsrfToken();
+                    
                     // Пытаемся обновить токен через refresh
                     const refreshResponse = await fetch('/api/auth/refresh', {
                         method: 'POST',
-                        credentials: 'include'
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-Token': csrfToken
+                        }
                     });
                     
                     if (refreshResponse.ok) {

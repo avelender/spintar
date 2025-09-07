@@ -2,12 +2,22 @@
  * API для управления отношениями между пользователями (друзья/враги)
  */
 import { validateUsername, validateRelationType, validateRelationAction } from './utils/validation';
+import { getCsrfTokenFromCookie, validateCsrfToken } from './utils/csrf';
 
 export default async function handler(req, res) {
   // Проверяем метод запроса
   if (req.method === 'GET') {
     return handleGetRelations(req, res);
   } else if (req.method === 'POST') {
+    // Проверяем CSRF-токен для POST запросов
+    const cookieToken = getCsrfTokenFromCookie(req);
+    const requestToken = req.headers['x-csrf-token'];
+    
+    if (!validateCsrfToken(requestToken, cookieToken)) {
+      console.error('❌ CSRF validation failed in relations API');
+      return res.status(403).json({ error: 'CSRF validation failed' });
+    }
+    
     return handleUpdateRelations(req, res);
   } else {
     return res.status(405).json({ error: 'Method not allowed' });

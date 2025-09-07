@@ -1,8 +1,19 @@
 // Обновление access token через refresh token
+import { getCsrfTokenFromCookie, validateCsrfToken } from '../utils/csrf';
+
 export default async function handler(req, res) {
     // Разрешаем только POST запросы
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
+    }
+    
+    // Проверяем CSRF-токен
+    const cookieToken = getCsrfTokenFromCookie(req);
+    const requestToken = req.headers['x-csrf-token'];
+    
+    if (!validateCsrfToken(requestToken, cookieToken)) {
+        console.error('❌ CSRF validation failed in refresh');
+        return res.status(403).json({ error: 'CSRF validation failed' });
     }
 
     try {
